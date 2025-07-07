@@ -273,7 +273,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-uppercase mb-1">Programas Activos</h6>
-                            <h2 class="mb-0"><?php echo $programas_activos; ?></h2>
+                            <h2 class="mb-0"><?php echo isset($total_programas_activos) ? $total_programas_activos : $programas_activos; ?></h2>
                         </div>
                         <div class="bg-white bg-opacity-25 rounded-circle p-3">
                             <i class="fas fa-calendar-check fa-2x"></i>
@@ -424,7 +424,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-uppercase mb-1">Programas Activos</h6>
-                            <h2 class="mb-0"><?php echo $programas_activos; ?></h2>
+                            <h2 class="mb-0"><?php echo isset($total_programas_activos) ? $total_programas_activos : $programas_activos; ?></h2>
                         </div>
                         <div class="bg-white bg-opacity-25 rounded-circle p-3">
                             <i class="fas fa-calendar-check fa-2x"></i>
@@ -553,9 +553,18 @@
 <!-- Scripts para los gráficos -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Gráfico de entrenamientos por mes
-const ctxEntrenamientos = document.getElementById('entrenamientosPorMes').getContext('2d');
-new Chart(ctxEntrenamientos, {
+// Función para verificar si un elemento existe antes de crear el gráfico
+function createChartIfElementExists(elementId, chartConfig) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const ctx = element.getContext('2d');
+        return new Chart(ctx, chartConfig);
+    }
+    return null;
+}
+
+// Gráfico de entrenamientos por mes (solo para admin)
+const entrenamientosChart = createChartIfElementExists('entrenamientosPorMes', {
     type: 'line',
     data: {
         labels: <?php echo json_encode(isset($entrenamientos_por_mes) && is_array($entrenamientos_por_mes) ? array_column($entrenamientos_por_mes, 'mes') : []); ?>,
@@ -572,9 +581,8 @@ new Chart(ctxEntrenamientos, {
     }
 });
 
-// Gráfico de distribución de usuarios
-const ctxUsuarios = document.getElementById('distribucionUsuarios').getContext('2d');
-new Chart(ctxUsuarios, {
+// Gráfico de distribución de usuarios (solo para admin)
+const usuariosChart = createChartIfElementExists('distribucionUsuarios', {
     type: 'doughnut',
     data: {
         labels: ['Entrenadores', 'Entrenados'],

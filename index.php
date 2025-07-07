@@ -143,6 +143,12 @@ switch ($request) {
         $controller->asignar($matches[1]);
         break;
 
+    case 'entrenamientos/asignar-rapido':
+        require __DIR__ . '/controllers/EntrenamientoController.php';
+        $controller = new EntrenamientoController();
+        $controller->asignarRapido();
+        break;
+
     // Rutas de gestión de usuarios
     case 'usuarios':
         require __DIR__ . '/controllers/AdminController.php';

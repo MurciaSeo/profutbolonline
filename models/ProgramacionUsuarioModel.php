@@ -251,21 +251,24 @@ class ProgramacionUsuarioModel extends BaseModel {
                            WHEN pu.fecha_inicio <= CURDATE() THEN 'activo'
                            ELSE 'pendiente'
                        END as estado,
-                       ROUND((SELECT COUNT(*) FROM programacion_dias_usuarios pdu 
-                             INNER JOIN programacion_dias pd ON pdu.dia_id = pd.id
-                             INNER JOIN programacion_semanas ps ON pd.semana_id = ps.id
-                             WHERE ps.programacion_id = p.id AND pdu.usuario_id = :usuario_id AND pdu.completado = 1) * 100.0 / 
-                            (SELECT COUNT(*) FROM programacion_dias pd
-                             INNER JOIN programacion_semanas ps ON pd.semana_id = ps.id
-                             WHERE ps.programacion_id = p.id), 1) as progreso
+                       COALESCE(
+                           ROUND(
+                               (SELECT COUNT(*) FROM programacion_dias_usuarios pdu 
+                                INNER JOIN programacion_dias pd ON pdu.dia_id = pd.id
+                                INNER JOIN programacion_semanas ps ON pd.semana_id = ps.id
+                                WHERE ps.programacion_id = p.id AND pdu.usuario_id = ? AND pdu.completado = 1) * 100.0 / 
+                               NULLIF((SELECT COUNT(*) FROM programacion_dias pd
+                                      INNER JOIN programacion_semanas ps ON pd.semana_id = ps.id
+                                      WHERE ps.programacion_id = p.id), 0)
+                           , 1)
+                       , 0) as progreso
                    FROM programacion_usuarios pu
                    INNER JOIN programaciones p ON pu.programacion_id = p.id
-                   WHERE pu.usuario_id = :usuario_id 
+                   WHERE pu.usuario_id = ? 
                    AND pu.fecha_fin >= CURDATE()
                    ORDER BY pu.fecha_inicio ASC";
             $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':usuario_id', $usuario_id, PDO::PARAM_INT);
-            $stmt->execute();
+            $stmt->execute([$usuario_id, $usuario_id]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Error en getProgramasActivosPorUsuario: " . $e->getMessage());

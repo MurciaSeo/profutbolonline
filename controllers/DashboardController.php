@@ -79,7 +79,7 @@ class DashboardController extends BaseController {
             // Métricas para entrenados
             $data['total_entrenamientos'] = $this->entrenamientoModel->getTotalEntrenamientosPorUsuario($usuario_id);
             $data['entrenamientos_completados'] = $this->entrenamientoModel->getTotalEntrenamientosCompletadosPorUsuario($usuario_id);
-            $data['programas_activos'] = $this->programacionUsuarioModel->getTotalProgramasActivosPorUsuario($usuario_id);
+            $data['total_programas_activos'] = $this->programacionUsuarioModel->getTotalProgramasActivosPorUsuario($usuario_id);
             $data['progreso_general'] = $this->entrenamientoModel->getProgresoGeneral($usuario_id);
 
             // Próximos entrenamientos

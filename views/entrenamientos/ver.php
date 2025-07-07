@@ -78,7 +78,9 @@
                                                         <i class="fas fa-play"></i> Ver
                                                     </button>
                                                 <?php else: ?>
-                                                    -
+                                                    <span class="text-muted small">
+                                                        <i class="fas fa-info-circle"></i> Sin video
+                                                    </span>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>
@@ -113,7 +115,17 @@
             </div>
             <div class="modal-body">
                 <div class="ratio ratio-16x9">
-                    <iframe id="videoFrame" src="" allowfullscreen></iframe>
+                    <iframe id="videoFrame" src="" allowfullscreen 
+                            onload="console.log('Video loaded successfully')"
+                            onerror="console.log('Error loading video')"></iframe>
+                </div>
+                <div id="videoError" class="alert alert-warning mt-3" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    No se pudo cargar el video. Esto puede deberse a restricciones del sitio web.
+                    <br>
+                    <a href="#" id="openVideoLink" target="_blank" class="btn btn-sm btn-primary mt-2">
+                        <i class="fas fa-external-link-alt"></i> Abrir en YouTube
+                    </a>
                 </div>
             </div>
         </div>
@@ -121,21 +133,97 @@
 </div>
 
 <script>
+// Función para convertir URLs de YouTube al formato de embed
+function convertToEmbedUrl(url) {
+    if (!url) return '';
+    
+    // Si ya es una URL de embed, devolverla tal como está
+    if (url.includes('youtube.com/embed/')) {
+        return url;
+    }
+    
+    // Extraer el ID del video de diferentes formatos de URL de YouTube
+    let videoId = '';
+    
+    // Formato: https://www.youtube.com/watch?v=VIDEO_ID
+    if (url.includes('youtube.com/watch?v=')) {
+        videoId = url.split('v=')[1];
+    }
+    // Formato: https://youtu.be/VIDEO_ID
+    else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1];
+    }
+    // Formato: https://www.youtube.com/embed/VIDEO_ID
+    else if (url.includes('youtube.com/embed/')) {
+        videoId = url.split('embed/')[1];
+    }
+    
+    // Limpiar parámetros adicionales
+    if (videoId && videoId.includes('&')) {
+        videoId = videoId.split('&')[0];
+    }
+    if (videoId && videoId.includes('?')) {
+        videoId = videoId.split('?')[0];
+    }
+    
+    if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    return url; // Si no se puede convertir, devolver la URL original
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing video modal...');
+    
     const videoModal = new bootstrap.Modal(document.getElementById('videoModal'));
     const videoFrame = document.getElementById('videoFrame');
+    const videoError = document.getElementById('videoError');
+    const openVideoLink = document.getElementById('openVideoLink');
+    
+    console.log('Video modal element:', document.getElementById('videoModal'));
+    console.log('Video frame element:', videoFrame);
     
     document.querySelectorAll('.ver-video').forEach(button => {
+        console.log('Found video button:', button);
         button.addEventListener('click', function() {
             const videoUrl = this.getAttribute('data-video-url');
-            videoFrame.src = videoUrl;
+            console.log('Original Video URL:', videoUrl);
+            
+            const embedUrl = convertToEmbedUrl(videoUrl);
+            console.log('Converted to embed URL:', embedUrl);
+            
+            // Ocultar mensaje de error
+            videoError.style.display = 'none';
+            
+            // Configurar el enlace alternativo
+            openVideoLink.href = videoUrl;
+            
+            // Intentar cargar el video
+            videoFrame.src = embedUrl;
             videoModal.show();
+            
+            // Verificar si el video se carga correctamente después de un tiempo
+            setTimeout(() => {
+                try {
+                    const iframeDoc = videoFrame.contentDocument || videoFrame.contentWindow.document;
+                    if (!iframeDoc || iframeDoc.body.innerHTML.includes('error') || iframeDoc.body.innerHTML.includes('denied')) {
+                        console.log('Video failed to load, showing error message');
+                        videoError.style.display = 'block';
+                    }
+                } catch (e) {
+                    console.log('Cross-origin error, video might be blocked');
+                    videoError.style.display = 'block';
+                }
+            }, 3000);
         });
     });
     
     // Limpiar el iframe cuando se cierra el modal
     document.getElementById('videoModal').addEventListener('hidden.bs.modal', function () {
+        console.log('Modal hidden, clearing iframe');
         videoFrame.src = '';
+        videoError.style.display = 'none';
     });
 });
 </script>

@@ -39,8 +39,9 @@ class EntrenamientoModel extends BaseModel {
             
             // Procesar el JSON de ejercicios para cada entrenamiento
             foreach ($entrenamientos as &$entrenamiento) {
-                if ($entrenamiento['ejercicios']) {
-                    $entrenamiento['ejercicios'] = json_decode($entrenamiento['ejercicios'], true);
+                if ($entrenamiento['ejercicios'] && $entrenamiento['ejercicios'] !== null) {
+                    $decoded = json_decode($entrenamiento['ejercicios'], true);
+                    $entrenamiento['ejercicios'] = is_array($decoded) ? $decoded : [];
                 } else {
                     $entrenamiento['ejercicios'] = [];
                 }
@@ -81,8 +82,9 @@ class EntrenamientoModel extends BaseModel {
         
         // Procesar el JSON de ejercicios para cada entrenamiento
         foreach ($entrenamientos as &$entrenamiento) {
-            if ($entrenamiento['ejercicios']) {
-                $entrenamiento['ejercicios'] = json_decode($entrenamiento['ejercicios'], true);
+            if ($entrenamiento['ejercicios'] && $entrenamiento['ejercicios'] !== null) {
+                $decoded = json_decode($entrenamiento['ejercicios'], true);
+                $entrenamiento['ejercicios'] = is_array($decoded) ? $decoded : [];
             } else {
                 $entrenamiento['ejercicios'] = [];
             }
@@ -381,8 +383,9 @@ class EntrenamientoModel extends BaseModel {
         $stmt->execute([$id]);
         $entrenamiento = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if ($entrenamiento && $entrenamiento['bloques']) {
-            $entrenamiento['bloques'] = json_decode($entrenamiento['bloques'], true);
+        if ($entrenamiento && $entrenamiento['bloques'] && $entrenamiento['bloques'] !== null) {
+            $decoded = json_decode($entrenamiento['bloques'], true);
+            $entrenamiento['bloques'] = is_array($decoded) ? $decoded : [];
         } else {
             $entrenamiento['bloques'] = [];
         }
@@ -547,11 +550,10 @@ class EntrenamientoModel extends BaseModel {
     public function getProgresoGeneral($usuario_id) {
         try {
             $sql = "SELECT 
-                       (SELECT COUNT(*) FROM sesiones WHERE usuario_id = :usuario_id AND completado = 1) as completados,
-                       (SELECT COUNT(*) FROM sesiones WHERE usuario_id = :usuario_id) as total";
+                       (SELECT COUNT(*) FROM sesiones WHERE usuario_id = ? AND completado = 1) as completados,
+                       (SELECT COUNT(*) FROM sesiones WHERE usuario_id = ?) as total";
             $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':usuario_id', $usuario_id, PDO::PARAM_INT);
-            $stmt->execute();
+            $stmt->execute([$usuario_id, $usuario_id]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['total'] > 0 ? 
                 round(($result['completados'] / $result['total']) * 100, 1) : 0;
@@ -634,6 +636,24 @@ class EntrenamientoModel extends BaseModel {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Error al obtener entrenamientos por creador: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getAsignacionesRecientes($limite = 10) {
+        try {
+            $sql = "SELECT s.*, u.nombre as nombre_usuario, u.apellido as apellido_usuario,
+                           e.nombre as nombre_entrenamiento
+                    FROM sesiones s
+                    JOIN usuarios u ON s.usuario_id = u.id
+                    JOIN entrenamientos e ON s.entrenamiento_id = e.id
+                    ORDER BY s.fecha DESC
+                    LIMIT ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$limite]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error al obtener asignaciones recientes: " . $e->getMessage());
             return [];
         }
     }

@@ -138,12 +138,24 @@ class EntrenamientoController extends BaseController {
 
         // Verificar si el usuario tiene acceso al entrenamiento
         if ($_SESSION['user_role'] === 'entrenado') {
+            // Los entrenados solo pueden ver entrenamientos que les han sido asignados
             $tiene_acceso = $this->entrenamientoModel->verificarAccesoUsuario($id, $_SESSION['user_id']);
             if (!$tiene_acceso) {
-                $_SESSION['error'] = 'No tienes acceso a este entrenamiento';
+                $_SESSION['error'] = 'No tienes acceso a este entrenamiento. Contacta a tu entrenador para que te asigne este entrenamiento.';
                 $this->redirect('/dashboard');
                 return;
             }
+        } elseif ($_SESSION['user_role'] === 'entrenador') {
+            // Los entrenadores pueden ver todos los entrenamientos
+            // No se requiere verificación adicional
+        } elseif ($_SESSION['user_role'] === 'admin') {
+            // Los administradores pueden ver todos los entrenamientos
+            // No se requiere verificación adicional
+        } else {
+            // Rol no reconocido
+            $_SESSION['error'] = 'No tienes permisos para acceder a entrenamientos';
+            $this->redirect('/dashboard');
+            return;
         }
         
         $this->render('entrenamientos/ver', [
@@ -565,6 +577,73 @@ class EntrenamientoController extends BaseController {
             'usuario' => $usuario,
             'entrenamientos' => $entrenamientos,
             'entrenamientos_asignados' => $entrenamientos_asignados
+        ]);
+    }
+
+    public function asignarRapido() {
+        $this->requireAuth();
+        
+        // Verificar que el usuario tiene permiso para asignar entrenamientos
+        if ($_SESSION['user_role'] === 'entrenador') {
+            // Si es entrenador, solo puede asignar a sus entrenados
+            $usuarios = $this->usuarioModel->getEntrenadosPorEntrenador($_SESSION['user_id']);
+        } elseif ($_SESSION['user_role'] === 'admin') {
+            // Si es admin, puede asignar a todos los entrenados
+            $usuarios = $this->usuarioModel->getUsuariosPorRol('entrenado');
+        } else {
+            // Si no es entrenador ni admin, redirigir al dashboard
+            $_SESSION['error'] = 'No tienes permisos para asignar entrenamientos';
+            $this->redirect('/dashboard');
+            return;
+        }
+        
+        // Obtener todos los entrenamientos disponibles
+        $entrenamientos = $this->entrenamientoModel->findAll();
+        
+        // Obtener asignaciones recientes
+        $asignaciones_recientes = $this->entrenamientoModel->getAsignacionesRecientes(10);
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $usuario_id = $_POST['usuario_id'] ?? null;
+            $entrenamiento_id = $_POST['entrenamiento_id'] ?? null;
+            $fecha = $_POST['fecha'] ?? null;
+            
+            if (!$usuario_id || !$entrenamiento_id || !$fecha) {
+                $_SESSION['error'] = 'Todos los campos son obligatorios';
+            } else {
+                // Verificar que el usuario existe y es entrenado
+                $usuario = $this->usuarioModel->findById($usuario_id);
+                if (!$usuario || $usuario['rol'] !== 'entrenado') {
+                    $_SESSION['error'] = 'Usuario no válido';
+                } else {
+                    // Verificar que el entrenamiento existe
+                    $entrenamiento = $this->entrenamientoModel->findById($entrenamiento_id);
+                    if (!$entrenamiento) {
+                        $_SESSION['error'] = 'Entrenamiento no válido';
+                    } else {
+                        // Verificar que no esté ya asignado
+                        $ya_asignado = $this->entrenamientoModel->verificarAccesoUsuario($entrenamiento_id, $usuario_id);
+                        if ($ya_asignado) {
+                            $_SESSION['error'] = 'Este entrenamiento ya está asignado al usuario';
+                        } else {
+                            // Asignar el entrenamiento
+                            if ($this->entrenamientoModel->asignarEntrenamiento($entrenamiento_id, $usuario_id, $fecha)) {
+                                $_SESSION['success'] = 'Entrenamiento asignado correctamente';
+                                $this->redirect('/entrenamientos/asignar-rapido');
+                                return;
+                            } else {
+                                $_SESSION['error'] = 'Error al asignar el entrenamiento';
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        $this->render('entrenamientos/asignar_rapido', [
+            'usuarios' => $usuarios,
+            'entrenamientos' => $entrenamientos,
+            'asignaciones_recientes' => $asignaciones_recientes
         ]);
     }
 } 

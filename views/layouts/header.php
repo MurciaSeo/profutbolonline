@@ -257,6 +257,11 @@
                                             <i class="fas fa-clipboard-list me-1"></i> Entrenamientos
                                         </a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="/entrenamientos/asignar-rapido">
+                                            <i class="fas fa-plus-circle me-1"></i> Asignar Entrenamiento
+                                        </a>
+                                    </li>
                                     <li><a class="dropdown-item" href="/programaciones"><i class="fas fa-calendar-alt me-2"></i> Programas de Entrenamiento</a></li>
                                 </ul>
                             </li>
