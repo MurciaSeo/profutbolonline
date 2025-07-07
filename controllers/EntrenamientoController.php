@@ -158,9 +158,38 @@ class EntrenamientoController extends BaseController {
             return;
         }
         
-        $this->render('entrenamientos/ver', [
-            'entrenamiento' => $entrenamiento
-        ]);
+        // Obtener información de la sesión del usuario para este entrenamiento
+        $sql = "SELECT s.fecha, s.fecha_completado, s.completado, s.valorado 
+                FROM sesiones s 
+                WHERE s.entrenamiento_id = ? AND s.usuario_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id, $_SESSION['user_id']]);
+        $sesion = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        
+        $data = [
+            'entrenamiento' => $entrenamiento,
+            'sesion' => $sesion
+        ];
+        
+        // Si es entrenado, obtener datos de valoración
+        if ($_SESSION['user_role'] === 'entrenado' && $sesion) {
+            $sql = "SELECT v.*, s.valorado 
+                    FROM sesiones s 
+                    LEFT JOIN valoraciones_entrenamientos v ON s.entrenamiento_id = v.entrenamiento_id 
+                        AND s.usuario_id = v.usuario_id 
+                        AND s.id = v.sesion_id
+                    WHERE s.entrenamiento_id = ? AND s.usuario_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id, $_SESSION['user_id']]);
+            $valoracion = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($valoracion) {
+                $data['valoracion'] = $valoracion;
+            }
+        }
+        
+        $this->render('entrenamientos/ver', $data);
     }
     
     public function editar($id) {
@@ -182,6 +211,7 @@ class EntrenamientoController extends BaseController {
                         $data['bloques'][] = [
                             'nombre' => $bloque['nombre'],
                             'descripcion' => $bloque['descripcion'] ?? '',
+                            'serie' => !empty($bloque['serie']) ? (int)$bloque['serie'] : 1,
                             'ejercicios' => []
                         ];
                         
@@ -191,9 +221,12 @@ class EntrenamientoController extends BaseController {
                                 if (!empty($ejercicio['ejercicio_id'])) {
                                     $data['bloques'][$index]['ejercicios'][] = [
                                         'ejercicio_id' => $ejercicio['ejercicio_id'],
+                                        'tipo_configuracion' => $ejercicio['tipo_configuracion'] ?? 'repeticiones',
                                         'tiempo' => !empty($ejercicio['tiempo']) ? (int)$ejercicio['tiempo'] : null,
                                         'repeticiones' => !empty($ejercicio['repeticiones']) ? (int)$ejercicio['repeticiones'] : null,
-                                        'tiempo_descanso' => !empty($ejercicio['tiempo_descanso']) ? (int)$ejercicio['tiempo_descanso'] : null
+                                        'tiempo_descanso' => !empty($ejercicio['tiempo_descanso']) ? (int)$ejercicio['tiempo_descanso'] : null,
+                                        'peso_kg' => !empty($ejercicio['peso_kg']) ? (float)$ejercicio['peso_kg'] : null,
+                                        'repeticiones_por_hacer' => !empty($ejercicio['repeticiones_por_hacer']) ? (int)$ejercicio['repeticiones_por_hacer'] : null
                                     ];
                                 }
                             }
@@ -261,23 +294,44 @@ class EntrenamientoController extends BaseController {
             exit;
         }
 
-        $entrenamientoModel = new EntrenamientoModel();
-        $entrenamiento = $entrenamientoModel->findById($id);
+        $usuario_id = $_SESSION['user_id'];
+        
+        // Buscar la sesión del usuario para este entrenamiento
+        $sql = "SELECT s.id as sesion_id, s.completado, e.nombre 
+                FROM sesiones s 
+                JOIN entrenamientos e ON s.entrenamiento_id = e.id 
+                WHERE s.entrenamiento_id = ? AND s.usuario_id = ?";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id, $usuario_id]);
+        $sesion = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$entrenamiento || $entrenamiento['usuario_id'] != $_SESSION['user_id']) {
-            $_SESSION['error'] = "No tienes permiso para completar este entrenamiento";
+        if (!$sesion) {
+            $_SESSION['error'] = "No tienes acceso a este entrenamiento o no está asignado";
             header('Location: /entrenamientos');
             exit;
         }
 
-        if ($entrenamientoModel->marcarCompletado($id)) {
-            $_SESSION['success'] = "¡Entrenamiento completado con éxito!";
-        } else {
-            $_SESSION['error'] = "Error al marcar el entrenamiento como completado";
+        if ($sesion['completado']) {
+            $_SESSION['error'] = "Este entrenamiento ya ha sido completado";
+            header('Location: /entrenamientos');
+            exit;
         }
 
-        header('Location: /entrenamientos');
-        exit;
+        // Marcar la sesión como completada
+        $sql = "UPDATE sesiones SET completado = TRUE, fecha_completado = NOW() WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        
+        if ($stmt->execute([$sesion['sesion_id']])) {
+            $_SESSION['success'] = "¡Entrenamiento completado con éxito!";
+            // Redirigir a la valoración
+            header('Location: /entrenamientos/valorar/' . $id);
+            exit;
+        } else {
+            $_SESSION['error'] = "Error al marcar el entrenamiento como completado";
+            header('Location: /entrenamientos/ver/' . $id);
+            exit;
+        }
     }
 
     /**
@@ -289,18 +343,27 @@ class EntrenamientoController extends BaseController {
             exit;
         }
 
-        $entrenamientoModel = new EntrenamientoModel();
-        $entrenamiento = $entrenamientoModel->findById($id);
+        $usuario_id = $_SESSION['user_id'];
+        
+        // Buscar la sesión del usuario para este entrenamiento
+        $sql = "SELECT s.id as sesion_id, s.completado, e.nombre, e.id as entrenamiento_id
+                FROM sesiones s 
+                JOIN entrenamientos e ON s.entrenamiento_id = e.id 
+                WHERE s.entrenamiento_id = ? AND s.usuario_id = ?";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id, $usuario_id]);
+        $sesion = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$entrenamiento || $entrenamiento['usuario_id'] != $_SESSION['user_id']) {
-            $_SESSION['error'] = "No tienes permiso para valorar este entrenamiento";
+        if (!$sesion) {
+            $_SESSION['error'] = "No tienes acceso a este entrenamiento";
             header('Location: /entrenamientos');
             exit;
         }
 
-        if (!$entrenamiento['completado']) {
+        if (!$sesion['completado']) {
             $_SESSION['error'] = "Debes completar el entrenamiento antes de valorarlo";
-            header('Location: /entrenamientos');
+            header('Location: /entrenamientos/ver/' . $id);
             exit;
         }
 
@@ -309,7 +372,7 @@ class EntrenamientoController extends BaseController {
             if (!isset($_POST['valoracion']['esfuerzo']) || !isset($_POST['valoracion']['calidad']) || !isset($_POST['valoracion']['videos'])) {
                 $_SESSION['error'] = "Debes completar todas las valoraciones";
                 $this->render('entrenamientos/valorar', [
-                    'entrenamiento' => $entrenamiento
+                    'entrenamiento' => ['id' => $sesion['entrenamiento_id'], 'nombre' => $sesion['nombre']]
                 ]);
                 return;
             }
@@ -321,21 +384,41 @@ class EntrenamientoController extends BaseController {
                 'comentarios' => $_POST['valoracion']['comentarios'] ?? ''
             ];
 
-            if ($entrenamientoModel->añadirValoracion($id, $valoracion)) {
+            // Insertar la valoración en la tabla valoraciones_entrenamientos
+            $sql = "INSERT INTO valoraciones_entrenamientos 
+                    (entrenamiento_id, usuario_id, dia_id, sesion_id, calidad, esfuerzo, complejidad, duracion, comentarios) 
+                    VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?)";
+            $stmt = $this->db->prepare($sql);
+            
+            if ($stmt->execute([
+                $sesion['entrenamiento_id'],
+                $usuario_id,
+                $sesion['sesion_id'],
+                $valoracion['calidad'],
+                $valoracion['esfuerzo'], 
+                $valoracion['videos'], // usando videos como complejidad
+                $valoracion['esfuerzo'], // usando esfuerzo como duración
+                $valoracion['comentarios']
+            ])) {
+                // Marcar la sesión como valorada
+                $sql = "UPDATE sesiones SET valorado = 1 WHERE id = ?";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([$sesion['sesion_id']]);
+                
                 $_SESSION['success'] = "¡Gracias por tu valoración!";
                 header('Location: /entrenamientos');
                 exit;
             } else {
                 $_SESSION['error'] = "Error al guardar la valoración";
                 $this->render('entrenamientos/valorar', [
-                    'entrenamiento' => $entrenamiento
+                    'entrenamiento' => ['id' => $sesion['entrenamiento_id'], 'nombre' => $sesion['nombre']]
                 ]);
                 return;
             }
         }
 
         $this->render('entrenamientos/valorar', [
-            'entrenamiento' => $entrenamiento
+            'entrenamiento' => ['id' => $sesion['entrenamiento_id'], 'nombre' => $sesion['nombre']]
         ]);
     }
 
@@ -354,9 +437,24 @@ class EntrenamientoController extends BaseController {
             return;
         }
 
-        // Verificar permisos
-        if ($entrenamiento['usuario_id'] != $_SESSION['user_id'] && $_SESSION['user_role'] !== 'admin') {
-            $_SESSION['error'] = "No tiene permisos para acceder a este entrenamiento.";
+        // Verificar permisos según el rol
+        if ($_SESSION['user_role'] === 'entrenado') {
+            // Los entrenados solo pueden descargar entrenamientos que les han sido asignados
+            $tiene_acceso = $this->entrenamientoModel->verificarAccesoUsuario($id, $_SESSION['user_id']);
+            if (!$tiene_acceso) {
+                $_SESSION['error'] = "No tienes acceso a este entrenamiento. Contacta a tu entrenador para que te asigne este entrenamiento.";
+                $this->redirect('/entrenamientos');
+                return;
+            }
+        } elseif ($_SESSION['user_role'] === 'entrenador') {
+            // Los entrenadores pueden descargar todos los entrenamientos
+            // No se requiere verificación adicional
+        } elseif ($_SESSION['user_role'] === 'admin') {
+            // Los administradores pueden descargar todos los entrenamientos
+            // No se requiere verificación adicional
+        } else {
+            // Rol no reconocido
+            $_SESSION['error'] = "No tienes permisos para acceder a entrenamientos";
             $this->redirect('/entrenamientos');
             return;
         }
@@ -379,7 +477,7 @@ class EntrenamientoController extends BaseController {
         $pdf->SetAutoPageBreak(TRUE, 15);
         
         // Configurar fuente
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetFont('helvetica', '', 11);
         
         // Agregar página
         $pdf->AddPage();
@@ -389,77 +487,108 @@ class EntrenamientoController extends BaseController {
             <style>
                 body {
                     font-family: helvetica;
-                    font-size: 12pt;
-                    line-height: 1.6;
-                    color: #333333;
-                    margin: 20px;
+                    font-size: 14pt;
+                    color: #222;
+                    margin: 0;
+                    padding: 20px;
                 }
-                h1 {
-                    color: #2c3e50;
-                    font-size: 24pt;
-                    margin-bottom: 10px;
+                .logo {
+                    text-align: center;
+                    margin-bottom: 25px;
                 }
-                h2 {
-                    color: #34495e;
+                .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    background-color: #1e40af;
+                    padding: 25px;
+                    border-radius: 10px;
+                }
+                .title {
+                    color: #ffffff;
+                    font-size: 28pt;
+                    font-weight: bold;
+                    margin-bottom: 8px;
+                }
+                .subtitle {
+                    color: #93c5fd;
                     font-size: 18pt;
-                    margin: 30px 0 15px 0;
+                    margin-bottom: 12px;
+                }
+                .date {
+                    color: #cbd5e1;
+                    font-size: 12pt;
+                    margin-bottom: 12px;
                 }
                 .description {
                     margin-bottom: 20px;
-                    font-size: 12pt;
+                    font-size: 14pt;
+                    background-color: #1e40af;
+                    padding: 18px;
+                    border-radius: 8px;
+                    color: #ffffff;
                 }
-                p {
-                    margin: 10px 0;
+                .block {
+                    margin-bottom: 30px;
+                    padding: 20px 18px 18px 18px;
+                    background: #1e40af;
+                    border-radius: 8px;
+                    border: 1px solid #3b82f6;
                 }
-                .info {
-                    color: #7f8c8d;
-                    font-size: 10pt;
-                    margin: 15px 0;
-                    text-align: center;
+                .block-title {
+                    font-size: 17pt;
+                    color: #ffffff;
+                    font-weight: bold;
+                    margin-bottom: 8px;
+                }
+                .block-series {
+                    font-size: 13pt;
+                    color: #93c5fd;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                }
+                .block-description {
+                    font-size: 13pt;
+                    color: #cbd5e1;
+                    margin-bottom: 12px;
                 }
                 table {
                     width: 100%;
                     border-collapse: collapse;
-                    margin: 20px 0;
+                    margin: 12px 0 0 0;
                 }
                 th {
-                    background-color: #f8f9fa;
-                    color: #2c3e50;
+                    background-color: #3b82f6;
+                    color: #ffffff;
                     font-weight: bold;
-                    font-size: 11pt;
-                    padding: 12px;
+                    font-size: 13pt;
+                    padding: 10px 6px;
+                    border-bottom: 2px solid #60a5fa;
                     text-align: left;
-                    border-bottom: 2px solid #dee2e6;
                 }
                 td {
-                    padding: 12px;
-                    font-size: 11pt;
-                    border-bottom: 1px solid #e9ecef;
+                    padding: 10px 6px;
+                    font-size: 13pt;
+                    border-bottom: 1px solid #3b82f6;
+                    background-color: #1e40af;
+                    color: #ffffff;
                 }
-                .ejercicio {
-                    margin: 25px 0;
-                    padding: 15px;
-                    background-color: #f8f9fa;
-                    border-radius: 5px;
-                }
-                .ejercicio h3 {
-                    color: #4361ee;
-                    font-weight: bold;
-                    font-size: 14pt;
-                    margin-bottom: 10px;
-                }
-                .ejercicio p {
-                    margin: 8px 0;
-                }
-                .video {
-                    color: #4361ee;
-                    text-decoration: none;
+                .footer {
+                    color: #93c5fd;
+                    font-size: 12pt;
+                    text-align: center;
+                    margin-top: 35px;
+                    background-color: #1e40af;
+                    padding: 18px;
+                    border-radius: 8px;
                 }
             </style>
         ';
         
         // Contenido HTML
         $html = $css;
+        
+        // Logo
+        $html .= '<div class="logo"><img src="https://profutbolonline.com/img/logo.png" height="60"></div>';
         
         // Encabezado
         $html .= '
@@ -479,37 +608,32 @@ class EntrenamientoController extends BaseController {
         foreach ($entrenamiento['bloques'] as $bloque) {
             $html .= '<div class="block">';
             $html .= '<div class="block-title">Bloque ' . $bloque['orden'] . ': ' . htmlspecialchars($bloque['nombre']) . '</div>';
-            
+            $html .= '<div class="block-series">Series: ' . (isset($bloque['serie']) ? $bloque['serie'] : 1) . '</div>';
             if (!empty($bloque['descripcion'])) {
                 $html .= '<div class="block-description">' . nl2br(htmlspecialchars($bloque['descripcion'])) . '</div>';
             }
-            
             if (!empty($bloque['ejercicios'])) {
                 // Ordenar ejercicios por orden
                 usort($bloque['ejercicios'], function($a, $b) {
                     return $a['orden'] - $b['orden'];
                 });
-                
                 $html .= '<table>
                     <tr>
-                        <th width="45%">Ejercicio</th>
+                        <th width="40%">Ejercicio</th>
                         <th width="15%">Repeticiones</th>
                         <th width="15%">Tiempo</th>
                         <th width="15%">Descanso</th>
                     </tr>';
-                
                 foreach ($bloque['ejercicios'] as $ejercicio) {
                     $html .= '<tr>
-                        <td class="exercise-name">' . htmlspecialchars($ejercicio['nombre']) . '</td>
-                        <td class="exercise-details">' . ($ejercicio['repeticiones'] ?? '-') . '</td>
-                        <td class="exercise-details">' . ($ejercicio['tiempo'] ? $ejercicio['tiempo'] . ' seg' : '-') . '</td>
-                        <td class="exercise-details">' . ($ejercicio['tiempo_descanso'] ? $ejercicio['tiempo_descanso'] . ' seg' : '-') . '</td>
+                        <td>' . htmlspecialchars($ejercicio['nombre']) . '</td>
+                        <td>' . ($ejercicio['repeticiones'] ?? '-') . '</td>
+                        <td>' . ($ejercicio['tiempo'] ? $ejercicio['tiempo'] . ' seg' : '-') . '</td>
+                        <td>' . ($ejercicio['tiempo_descanso'] ? $ejercicio['tiempo_descanso'] . ' seg' : '-') . '</td>
                     </tr>';
                 }
-                
                 $html .= '</table>';
             }
-            
             $html .= '</div>';
         }
         

@@ -6,3 +6,7 @@
 [07-Jul-2025 06:46:50 UTC] PHP Warning:  Undefined variable $dbname in /home/profutbolonline/public_html/solucionar_acceso_entrenamiento.php on line 8
 [07-Jul-2025 06:46:50 UTC] PHP Warning:  Undefined variable $username in /home/profutbolonline/public_html/solucionar_acceso_entrenamiento.php on line 8
 [07-Jul-2025 06:46:50 UTC] PHP Warning:  Undefined variable $password in /home/profutbolonline/public_html/solucionar_acceso_entrenamiento.php on line 8
+[07-Jul-2025 08:06:58 UTC] PHP Warning:  Undefined variable $host in /home/profutbolonline/public_html/test_solucion_final.php on line 6
+[07-Jul-2025 08:06:58 UTC] PHP Warning:  Undefined variable $dbname in /home/profutbolonline/public_html/test_solucion_final.php on line 6
+[07-Jul-2025 08:06:58 UTC] PHP Warning:  Undefined variable $username in /home/profutbolonline/public_html/test_solucion_final.php on line 6
+[07-Jul-2025 08:06:58 UTC] PHP Warning:  Undefined variable $password in /home/profutbolonline/public_html/test_solucion_final.php on line 6

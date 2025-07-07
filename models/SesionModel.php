@@ -91,6 +91,7 @@ class SesionModel extends BaseModel {
                     'nombre' => $row['nombre'],
                     'descripcion' => $row['descripcion'],
                     'orden' => $row['orden'],
+                    'serie' => $row['serie'] ?? 1,
                     'ejercicios' => []
                 ];
             }

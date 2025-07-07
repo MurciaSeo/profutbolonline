@@ -10,7 +10,16 @@ class HomeController extends BaseController {
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/dashboard');
         } else {
-            $this->redirect('/login');
+            // Mostrar página web corporativa
+            $this->render('home/corporativa', []);
         }
+    }
+    
+    public function terminosCondiciones() {
+        $this->render('home/terminos-condiciones', []);
+    }
+    
+    public function politicaPrivacidad() {
+        $this->render('home/politica-privacidad', []);
     }
 } 

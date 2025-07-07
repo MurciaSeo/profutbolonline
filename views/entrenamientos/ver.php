@@ -1,30 +1,99 @@
 <?php require_once 'views/layouts/header.php'; ?>
 
+
+
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1><?php echo htmlspecialchars($entrenamiento['nombre']); ?></h1>
                 <div>
+                    <?php if ($_SESSION['user_role'] === 'entrenado' && isset($sesion) && $sesion): ?>
+                        <?php if (!$sesion['completado']): ?>
+                            <form action="/entrenamientos/completar/<?php echo $entrenamiento['id']; ?>" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-success me-2">
+                                    <i class="fas fa-check"></i> Marcar como Completado
+                                </button>
+                            </form>
+                        <?php elseif ($sesion['completado'] && !$sesion['valorado']): ?>
+                            <div class="alert alert-success d-inline-block me-2 mb-0">
+                                <i class="fas fa-check-circle"></i> Entrenamiento Completado
+                            </div>
+                            <a href="/entrenamientos/valorar/<?php echo $entrenamiento['id']; ?>" class="btn btn-info me-2">
+                                <i class="fas fa-star"></i> Valorar Entrenamiento
+                            </a>
+                        <?php elseif ($sesion['completado'] && $sesion['valorado']): ?>
+                            <div class="alert alert-success d-inline-block me-2 mb-0">
+                                <i class="fas fa-check-circle"></i> Entrenamiento Completado y Valorado
+                            </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                    
                     <a href="/entrenamientos" class="btn btn-secondary">Volver</a>
-                    <a href="/entrenamientos/editar/<?php echo $entrenamiento['id']; ?>" class="btn btn-primary">Editar</a>
+                    <?php if ($_SESSION['user_role'] === 'admin' || $_SESSION['user_role'] === 'entrenador'): ?>
+                        <a href="/entrenamientos/editar/<?php echo $entrenamiento['id']; ?>" class="btn btn-primary">Editar</a>
+                    <?php endif; ?>
                 </div>
             </div>
 
+            <?php if (isset($sesion) && $sesion): ?>
+            
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Detalles del Entrenamiento</h5>
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> Información de Asignación
+                    </h5>
                     <a href="/entrenamientos/descargarPDF/<?php echo $entrenamiento['id']; ?>" class="btn btn-primary">
                         <i class="fas fa-download"></i> Descargar PDF
                     </a>
                 </div>
                 <div class="card-body">
-                    <?php if (!empty($entrenamiento['notas'])): ?>
-                    <h5 class="card-title">Notas</h5>
-                    <p class="card-text"><?php echo nl2br(htmlspecialchars($entrenamiento['notas'])); ?></p>
-                    <?php endif; ?>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-calendar-plus text-primary me-2"></i>
+                                <strong>Fecha de Asignación:</strong>
+                                <span class="ms-2"><?php echo date('d/m/Y', strtotime($sesion['fecha'])); ?></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <?php if ($sesion['completado'] && $sesion['fecha_completado']): ?>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-calendar-check text-success me-2"></i>
+                                <strong>Fecha de Finalización:</strong>
+                                <span class="ms-2"><?php echo date('d/m/Y', strtotime($sesion['fecha_completado'])); ?></span>
+                            </div>
+                            <?php else: ?>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-clock text-warning me-2"></i>
+                                <strong>Estado:</strong>
+                                <span class="ms-2 badge bg-warning">Pendiente de completar</span>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <?php elseif ($_SESSION['user_role'] === 'entrenado'): ?>
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning"></i> Entrenamiento No Asignado
+                    </h5>
+                    <a href="/entrenamientos/descargarPDF/<?php echo $entrenamiento['id']; ?>" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Descargar PDF
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Este entrenamiento no está asignado a tu cuenta.</strong><br>
+                        Contacta a tu entrenador para que te asigne este entrenamiento y puedas ver tu progreso.
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <?php if (!empty($entrenamiento['bloques'])): ?>
                 <?php 
@@ -40,6 +109,9 @@
                         <h5 class="mb-0">
                             <span class="badge bg-primary me-2">Bloque <?php echo $bloque['orden']; ?></span>
                             <?php echo htmlspecialchars($bloque['nombre']); ?>
+                            <span class="badge bg-info ms-2">
+                                <?php echo (isset($bloque['serie']) ? $bloque['serie'] : 1); ?> serie<?php echo ((isset($bloque['serie']) ? $bloque['serie'] : 1) > 1 ? 's' : ''); ?>
+                            </span>
                         </h5>
                         <?php if (!empty($bloque['descripcion'])): ?>
                             <small class="text-muted"><?php echo htmlspecialchars($bloque['descripcion']); ?></small>
@@ -52,8 +124,7 @@
                                     <thead>
                                         <tr>
                                             <th>Ejercicio</th>
-                                            <th>Repeticiones</th>
-                                            <th>Tiempo</th>
+                                            <th>Configuración</th>
                                             <th>Descanso</th>
                                             <th>Video</th>
                                         </tr>
@@ -68,15 +139,44 @@
                                                     <small class="text-muted"><?php echo htmlspecialchars($ejercicio['descripcion']); ?></small>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><?php echo $ejercicio['repeticiones'] ? htmlspecialchars($ejercicio['repeticiones']) : '-'; ?></td>
-                                            <td><?php echo $ejercicio['tiempo'] ? htmlspecialchars($ejercicio['tiempo']) . ' seg' : '-'; ?></td>
+                                            <td>
+                                                <?php 
+                                                $tipo_config = $ejercicio['tipo_configuracion'] ?? 'repeticiones';
+                                                switch($tipo_config) {
+                                                    case 'tiempo':
+                                                        echo '<span class="badge bg-info me-2">Por Tiempo</span>';
+                                                        echo $ejercicio['tiempo'] ? htmlspecialchars($ejercicio['tiempo']) . ' seg' : '-';
+                                                        break;
+                                                    case 'repeticiones_reserva':
+                                                        echo '<span class="badge bg-warning me-2">Por Repeticiones + Reserva</span>';
+                                                        echo $ejercicio['repeticiones'] ? htmlspecialchars($ejercicio['repeticiones']) . ' rep' : '-';
+                                                        if ($ejercicio['peso_kg']) {
+                                                            echo '<br><small class="text-muted">Peso: ' . htmlspecialchars($ejercicio['peso_kg']) . ' kg</small>';
+                                                        }
+                                                        if ($ejercicio['repeticiones_por_hacer']) {
+                                                            echo '<br><small class="text-info">Rep. por hacer: ' . htmlspecialchars($ejercicio['repeticiones_por_hacer']) . '</small>';
+                                                        }
+                                                        break;
+                                                    default: // repeticiones
+                                                        echo '<span class="badge bg-primary me-2">Por Repeticiones</span>';
+                                                        echo $ejercicio['repeticiones'] ? htmlspecialchars($ejercicio['repeticiones']) . ' rep' : '-';
+                                                        break;
+                                                }
+                                                ?>
+                                            </td>
                                             <td><?php echo $ejercicio['tiempo_descanso'] ? htmlspecialchars($ejercicio['tiempo_descanso']) . ' seg' : '-'; ?></td>
                                             <td>
                                                 <?php if (!empty($ejercicio['video_url'])): ?>
-                                                    <button type="button" class="btn btn-sm btn-info ver-video" 
-                                                            data-video-url="<?php echo htmlspecialchars($ejercicio['video_url']); ?>">
-                                                        <i class="fas fa-play"></i> Ver
-                                                    </button>
+                                                    <?php if (!empty($sesion) && $sesion['completado'] && $_SESSION['user_role'] === 'entrenado'): ?>
+                                                        <span class="text-muted small">
+                                                            <i class="fas fa-lock"></i> Video bloqueado
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <button type="button" class="btn btn-sm btn-info ver-video" 
+                                                                data-video-url="<?php echo htmlspecialchars($ejercicio['video_url']); ?>">
+                                                            <i class="fas fa-play"></i> Ver
+                                                        </button>
+                                                    <?php endif; ?>
                                                 <?php else: ?>
                                                     <span class="text-muted small">
                                                         <i class="fas fa-info-circle"></i> Sin video
@@ -103,6 +203,95 @@
             <?php endif; ?>
         </div>
     </div>
+    
+    <?php if ($_SESSION['user_role'] === 'entrenado'): ?>
+        <?php
+        // Usar los datos de valoración pasados desde el controlador
+        if (isset($valoracion) && $valoracion && $valoracion['valorado'] && $valoracion['calidad']): ?>
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-star text-warning"></i> 
+                                Mi Valoración del Entrenamiento
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Calificaciones:</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Calidad del entrenamiento:</label>
+                                        <div class="d-flex align-items-center">
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <i class="fas fa-star <?php echo $i <= $valoracion['calidad'] ? 'text-warning' : 'text-muted'; ?>"></i>
+                                            <?php endfor; ?>
+                                            <span class="ms-2"><?php echo $valoracion['calidad']; ?>/5</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Nivel de esfuerzo:</label>
+                                        <div class="d-flex align-items-center">
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <i class="fas fa-fire <?php echo $i <= $valoracion['esfuerzo'] ? 'text-danger' : 'text-muted'; ?>"></i>
+                                            <?php endfor; ?>
+                                            <span class="ms-2"><?php echo $valoracion['esfuerzo']; ?>/5</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Complejidad:</label>
+                                        <div class="d-flex align-items-center">
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <i class="fas fa-brain <?php echo $i <= $valoracion['complejidad'] ? 'text-info' : 'text-muted'; ?>"></i>
+                                            <?php endfor; ?>
+                                            <span class="ms-2"><?php echo $valoracion['complejidad']; ?>/5</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Duración:</label>
+                                        <div class="d-flex align-items-center">
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <i class="fas fa-clock <?php echo $i <= $valoracion['duracion'] ? 'text-success' : 'text-muted'; ?>"></i>
+                                            <?php endfor; ?>
+                                            <span class="ms-2"><?php echo $valoracion['duracion']; ?>/5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6>Promedio General:</h6>
+                                    <?php 
+                                    $promedio = round(($valoracion['calidad'] + $valoracion['esfuerzo'] + $valoracion['complejidad'] + $valoracion['duracion']) / 4, 1);
+                                    ?>
+                                    <div class="display-4 text-center mb-3">
+                                        <span class="text-primary"><?php echo $promedio; ?></span>
+                                        <small class="text-muted">/5</small>
+                                    </div>
+                                    
+                                    <?php if (!empty($valoracion['comentarios'])): ?>
+                                        <h6>Comentarios:</h6>
+                                        <div class="alert alert-light">
+                                            <i class="fas fa-comment"></i>
+                                            <?php echo htmlspecialchars($valoracion['comentarios']); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="text-muted small">
+                                        <i class="fas fa-calendar"></i>
+                                        Valorado el <?php echo date('d/m/Y H:i', strtotime($valoracion['created_at'])); ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
 </div>
 
 <!-- Modal para el video -->

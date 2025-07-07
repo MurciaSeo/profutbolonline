@@ -396,6 +396,19 @@ switch ($request) {
         $controller->editarSesion($matches[1]);
         break;
         
+    // Rutas públicas legales
+    case 'terminos-condiciones':
+        require __DIR__ . '/controllers/HomeController.php';
+        $controller = new HomeController();
+        $controller->terminosCondiciones();
+        break;
+        
+    case 'politica-privacidad':
+        require __DIR__ . '/controllers/HomeController.php';
+        $controller = new HomeController();
+        $controller->politicaPrivacidad();
+        break;
+        
     default:
         // Página no encontrada
         header("HTTP/1.0 404 Not Found");

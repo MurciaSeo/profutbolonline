@@ -65,11 +65,18 @@
                                             <textarea class="form-control" name="bloques[0][descripcion]" rows="2"></textarea>
                                         </div>
                                         <div class="mb-3">
+                                            <label class="form-label">Número de Series</label>
+                                            <input type="number" class="form-control" name="bloques[0][serie]" 
+                                                   placeholder="Número de series" min="1" value="1" required>
+                                            <small class="form-text text-muted">Número de veces que se repite este bloque</small>
+                                        </div>
+                                        <div class="mb-3">
                                             <label class="form-label">Ejercicios</label>
                                             <div class="ejercicios-container">
-                                                <div class="ejercicio-item mb-3">
-                                                    <div class="row">
+                                                <div class="ejercicio-item mb-3 p-3 border rounded bg-light">
+                                                    <div class="row g-3">
                                                         <div class="col-md-4">
+                                                            <label class="form-label small text-muted">Ejercicio</label>
                                                             <select class="form-select ejercicio-select" name="bloques[0][ejercicios][0][ejercicio_id]" required>
                                                                 <option value="">Seleccione un ejercicio</option>
                                                                 <?php foreach ($ejercicios as $ejercicio): ?>
@@ -79,22 +86,48 @@
                                                                 <?php endforeach; ?>
                                                             </select>
                                                         </div>
-                                                        <div class="col-md-2">
-                                                            <input type="number" class="form-control" name="bloques[0][ejercicios][0][repeticiones]" 
-                                                                   placeholder="Repeticiones" min="1">
+                                                        <div class="col-md-3">
+                                                            <label class="form-label small text-muted">Tipo de Configuración</label>
+                                                            <select class="form-select tipo-configuracion" name="bloques[0][ejercicios][0][tipo_configuracion]" required>
+                                                                <option value="repeticiones">Por Repeticiones</option>
+                                                                <option value="tiempo">Por Tiempo</option>
+                                                                <option value="repeticiones_reserva">Por Repeticiones + Reserva</option>
+                                                            </select>
                                                         </div>
                                                         <div class="col-md-2">
-                                                            <input type="number" class="form-control" name="bloques[0][ejercicios][0][tiempo]" 
-                                                                   placeholder="Tiempo (seg)" min="1">
-                                                        </div>
-                                                        <div class="col-md-2">
+                                                            <label class="form-label small text-muted">Descanso (seg)</label>
                                                             <input type="number" class="form-control" name="bloques[0][ejercicios][0][tiempo_descanso]" 
-                                                                   placeholder="Descanso (seg)" min="0" value="60">
+                                                                   placeholder="60" min="0" value="60">
                                                         </div>
                                                         <div class="col-md-2">
-                                                            <button type="button" class="btn btn-danger btn-sm eliminar-ejercicio">
-                                                                <i class="fas fa-trash"></i>
+                                                            <label class="form-label small text-muted">Acción</label>
+                                                            <button type="button" class="btn btn-danger btn-sm w-100 eliminar-ejercicio">
+                                                                <i class="fas fa-trash"></i> Eliminar
                                                             </button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Campos dinámicos según tipo de configuración -->
+                                                    <div class="row g-3 mt-2">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small text-muted campo-repeticiones-label">Repeticiones</label>
+                                                            <input type="number" class="form-control campo-repeticiones" name="bloques[0][ejercicios][0][repeticiones]" 
+                                                                   placeholder="Ej: 12" min="1">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small text-muted campo-tiempo-label" style="display: none;">Tiempo (segundos)</label>
+                                                            <input type="number" class="form-control campo-tiempo" name="bloques[0][ejercicios][0][tiempo]" 
+                                                                   placeholder="Ej: 45" min="1" style="display: none;">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small text-muted campo-peso-label" style="display: none;">Peso (kg)</label>
+                                                            <input type="number" class="form-control campo-peso" name="bloques[0][ejercicios][0][peso_kg]" 
+                                                                   placeholder="Ej: 20" min="0" step="0.5" style="display: none;">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small text-muted campo-rep-por-hacer-label" style="display: none;">Repeticiones por hacer</label>
+                                                            <input type="number" class="form-control campo-rep-por-hacer" name="bloques[0][ejercicios][0][repeticiones_por_hacer]" 
+                                                                   placeholder="Ej: 10" min="1" style="display: none;">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -150,12 +183,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         <textarea class="form-control" name="bloques[${bloqueCount}][descripcion]" rows="2"></textarea>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Número de Series</label>
+                        <input type="number" class="form-control" name="bloques[${bloqueCount}][serie]" 
+                               placeholder="Número de series" min="1" value="1" required>
+                        <small class="form-text text-muted">Número de veces que se repite este bloque</small>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Ejercicios</label>
                         <div class="ejercicios-container">
-                            <div class="ejercicio-item mb-3">
-                                <div class="row">
+                            <div class="ejercicio-item mb-3 p-3 border rounded bg-light">
+                                <div class="row g-3">
                                     <div class="col-md-4">
-                                    <select class="form-select ejercicio-select" name="bloques[${bloqueCount}][ejercicios][0][ejercicio_id]" required>
+                                        <label class="form-label small text-muted">Ejercicio</label>
+                                        <select class="form-select ejercicio-select" name="bloques[${bloqueCount}][ejercicios][0][ejercicio_id]" required>
                                             <option value="">Seleccione un ejercicio</option>
                                             <?php foreach ($ejercicios as $ejercicio): ?>
                                                 <option value="<?php echo $ejercicio['id']; ?>">
@@ -164,22 +204,48 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <div class="col-md-2">
-                                        <input type="number" class="form-control" name="bloques[${bloqueCount}][ejercicios][0][repeticiones]" 
-                                               placeholder="Repeticiones" min="1">
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">Tipo de Configuración</label>
+                                        <select class="form-select tipo-configuracion" name="bloques[${bloqueCount}][ejercicios][0][tipo_configuracion]" required>
+                                            <option value="repeticiones">Por Repeticiones</option>
+                                            <option value="tiempo">Por Tiempo</option>
+                                            <option value="repeticiones_reserva">Por Repeticiones + Reserva</option>
+                                        </select>
                                     </div>
                                     <div class="col-md-2">
-                                        <input type="number" class="form-control" name="bloques[${bloqueCount}][ejercicios][0][tiempo]" 
-                                               placeholder="Tiempo (seg)" min="1">
+                                        <label class="form-label small text-muted">Descanso (seg)</label>
+                                        <input type="number" class="form-control" name="bloques[${bloqueCount}][ejercicios][0][tiempo_descanso]" 
+                                               placeholder="60" min="0" value="60">
                                     </div>
                                     <div class="col-md-2">
-                                    <input type="number" class="form-control" name="bloques[${bloqueCount}][ejercicios][0][tiempo_descanso]" 
-                                               placeholder="Descanso (seg)" min="0" value="60">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <button type="button" class="btn btn-danger btn-sm eliminar-ejercicio">
-                                            <i class="fas fa-trash"></i>
+                                        <label class="form-label small text-muted">Acción</label>
+                                        <button type="button" class="btn btn-danger btn-sm w-100 eliminar-ejercicio">
+                                            <i class="fas fa-trash"></i> Eliminar
                                         </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Campos dinámicos según tipo de configuración -->
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted campo-repeticiones-label">Repeticiones</label>
+                                        <input type="number" class="form-control campo-repeticiones" name="bloques[${bloqueCount}][ejercicios][0][repeticiones]" 
+                                               placeholder="Ej: 12" min="1">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted campo-tiempo-label" style="display: none;">Tiempo (segundos)</label>
+                                        <input type="number" class="form-control campo-tiempo" name="bloques[${bloqueCount}][ejercicios][0][tiempo]" 
+                                               placeholder="Ej: 45" min="1" style="display: none;">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted campo-peso-label" style="display: none;">Peso (kg)</label>
+                                        <input type="number" class="form-control campo-peso" name="bloques[${bloqueCount}][ejercicios][0][peso_kg]" 
+                                               placeholder="Ej: 20" min="0" step="0.5" style="display: none;">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted campo-rep-por-hacer-label" style="display: none;">Repeticiones por hacer</label>
+                                        <input type="number" class="form-control campo-rep-por-hacer" name="bloques[${bloqueCount}][ejercicios][0][repeticiones_por_hacer]" 
+                                               placeholder="Ej: 10" min="1" style="display: none;">
                                     </div>
                                 </div>
                             </div>
@@ -226,9 +292,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const bloqueIndex = Array.from(bloquesContainer.children).indexOf(bloque);
             
             const ejercicioTemplate = `
-                <div class="ejercicio-item mb-3">
-                    <div class="row">
+                <div class="ejercicio-item mb-3 p-3 border rounded bg-light">
+                    <div class="row g-3">
                         <div class="col-md-4">
+                            <label class="form-label small text-muted">Ejercicio</label>
                             <select class="form-select ejercicio-select" name="bloques[${bloqueIndex}][ejercicios][${ejercicioCount}][ejercicio_id]" required>
                                 <option value="">Seleccione un ejercicio</option>
                                 <?php foreach ($ejercicios as $ejercicio): ?>
@@ -238,22 +305,48 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <input type="number" class="form-control" name="bloques[${bloqueIndex}][ejercicios][${ejercicioCount}][repeticiones]" 
-                                   placeholder="Repeticiones" min="1">
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">Tipo de Configuración</label>
+                            <select class="form-select tipo-configuracion" name="bloques[${bloqueIndex}][ejercicios][${ejercicioCount}][tipo_configuracion]" required>
+                                <option value="repeticiones">Por Repeticiones</option>
+                                <option value="tiempo">Por Tiempo</option>
+                                <option value="repeticiones_reserva">Por Repeticiones + Reserva</option>
+                            </select>
                         </div>
                         <div class="col-md-2">
-                            <input type="number" class="form-control" name="bloques[${bloqueIndex}][ejercicios][${ejercicioCount}][tiempo]" 
-                                   placeholder="Tiempo (seg)" min="1">
-                        </div>
-                        <div class="col-md-2">
+                            <label class="form-label small text-muted">Descanso (seg)</label>
                             <input type="number" class="form-control" name="bloques[${bloqueIndex}][ejercicios][${ejercicioCount}][tiempo_descanso]" 
-                                   placeholder="Descanso (seg)" min="0" value="60">
+                                   placeholder="60" min="0" value="60">
                         </div>
                         <div class="col-md-2">
-                            <button type="button" class="btn btn-danger btn-sm eliminar-ejercicio">
-                                <i class="fas fa-trash"></i>
+                            <label class="form-label small text-muted">Acción</label>
+                            <button type="button" class="btn btn-danger btn-sm w-100 eliminar-ejercicio">
+                                <i class="fas fa-trash"></i> Eliminar
                             </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Campos dinámicos según tipo de configuración -->
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted campo-repeticiones-label">Repeticiones</label>
+                            <input type="number" class="form-control campo-repeticiones" name="bloques[${bloqueIndex}][ejercicios][${ejercicioCount}][repeticiones]" 
+                                   placeholder="Ej: 12" min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted campo-tiempo-label" style="display: none;">Tiempo (segundos)</label>
+                            <input type="number" class="form-control campo-tiempo" name="bloques[${bloqueIndex}][ejercicios][${ejercicioCount}][tiempo]" 
+                                   placeholder="Ej: 45" min="1" style="display: none;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted campo-peso-label" style="display: none;">Peso (kg)</label>
+                            <input type="number" class="form-control campo-peso" name="bloques[${bloqueIndex}][ejercicios][${ejercicioCount}][peso_kg]" 
+                                   placeholder="Ej: 20" min="0" step="0.5" style="display: none;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted campo-rep-por-hacer-label" style="display: none;">Repeticiones por hacer</label>
+                            <input type="number" class="form-control campo-rep-por-hacer" name="bloques[${bloqueIndex}][ejercicios][${ejercicioCount}][repeticiones_por_hacer]" 
+                                   placeholder="Ej: 10" min="1" style="display: none;">
                         </div>
                     </div>
                 </div>
@@ -280,6 +373,49 @@ document.addEventListener('DOMContentLoaded', function() {
             event.stopPropagation();
         }
         form.classList.add('was-validated');
+    });
+
+    // Manejar cambio de tipo de configuración
+    bloquesContainer.addEventListener('change', function(e) {
+        if (e.target.classList.contains('tipo-configuracion')) {
+            const ejercicioItem = e.target.closest('.ejercicio-item');
+            const tipo = e.target.value;
+            
+            // Ocultar todos los campos y etiquetas primero
+            ejercicioItem.querySelector('.campo-repeticiones').style.display = 'none';
+            ejercicioItem.querySelector('.campo-repeticiones-label').style.display = 'none';
+            ejercicioItem.querySelector('.campo-tiempo').style.display = 'none';
+            ejercicioItem.querySelector('.campo-tiempo-label').style.display = 'none';
+            ejercicioItem.querySelector('.campo-peso').style.display = 'none';
+            ejercicioItem.querySelector('.campo-peso-label').style.display = 'none';
+            ejercicioItem.querySelector('.campo-rep-por-hacer').style.display = 'none';
+            ejercicioItem.querySelector('.campo-rep-por-hacer-label').style.display = 'none';
+            
+            // Mostrar campos según el tipo seleccionado
+            switch(tipo) {
+                case 'repeticiones':
+                    ejercicioItem.querySelector('.campo-repeticiones').style.display = 'block';
+                    ejercicioItem.querySelector('.campo-repeticiones-label').style.display = 'block';
+                    break;
+                case 'tiempo':
+                    ejercicioItem.querySelector('.campo-tiempo').style.display = 'block';
+                    ejercicioItem.querySelector('.campo-tiempo-label').style.display = 'block';
+                    break;
+                case 'repeticiones_reserva':
+                    ejercicioItem.querySelector('.campo-repeticiones').style.display = 'block';
+                    ejercicioItem.querySelector('.campo-repeticiones-label').style.display = 'block';
+                    ejercicioItem.querySelector('.campo-peso').style.display = 'block';
+                    ejercicioItem.querySelector('.campo-peso-label').style.display = 'block';
+                    ejercicioItem.querySelector('.campo-rep-por-hacer').style.display = 'block';
+                    ejercicioItem.querySelector('.campo-rep-por-hacer-label').style.display = 'block';
+                    break;
+            }
+        }
+    });
+
+    // Inicializar campos según el tipo seleccionado al cargar la página
+    document.querySelectorAll('.tipo-configuracion').forEach(select => {
+        select.dispatchEvent(new Event('change'));
     });
 });
 </script>

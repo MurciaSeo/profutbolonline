@@ -363,6 +363,9 @@ class EntrenamientoModel extends BaseModel {
                                     'tiempo', ee.tiempo,
                                     'repeticiones', ee.repeticiones,
                                     'tiempo_descanso', ee.tiempo_descanso,
+                                    'tipo_configuracion', ee.tipo_configuracion,
+                                    'peso_kg', ee.peso_kg,
+                                    'repeticiones_por_hacer', ee.repeticiones_por_hacer,
                                     'orden', ee.orden
                                 )
                             )
@@ -426,22 +429,24 @@ class EntrenamientoModel extends BaseModel {
             // Insertar los nuevos bloques y ejercicios
             foreach ($data['bloques'] as $bloqueIndex => $bloque) {
                 $query = "INSERT INTO entrenamiento_bloques 
-                         (entrenamiento_id, nombre, descripcion, orden) 
-                         VALUES (?, ?, ?, ?)";
+                         (entrenamiento_id, nombre, descripcion, orden, serie) 
+                         VALUES (?, ?, ?, ?, ?)";
                 $stmt = $this->db->prepare($query);
                 $stmt->execute([
                     $id,
                     $bloque['nombre'],
                     $bloque['descripcion'] ?? '',
-                    (int)$bloqueIndex + 1
+                    (int)$bloqueIndex + 1,
+                    $bloque['serie'] ?? 1
                 ]);
                 
                 $bloque_id = $this->db->lastInsertId();
                 
                 foreach ($bloque['ejercicios'] as $ejercicioIndex => $ejercicio) {
                     $query = "INSERT INTO entrenamiento_ejercicios 
-                             (entrenamiento_id, bloque_id, ejercicio_id, tiempo, repeticiones, tiempo_descanso, orden) 
-                             VALUES (?, ?, ?, ?, ?, ?, ?)";
+                             (entrenamiento_id, bloque_id, ejercicio_id, tiempo, repeticiones, tiempo_descanso, 
+                              tipo_configuracion, peso_kg, repeticiones_por_hacer, orden) 
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     $stmt = $this->db->prepare($query);
                     $stmt->execute([
                         $id,
@@ -450,6 +455,9 @@ class EntrenamientoModel extends BaseModel {
                         !empty($ejercicio['tiempo']) ? (int)$ejercicio['tiempo'] : null,
                         !empty($ejercicio['repeticiones']) ? (int)$ejercicio['repeticiones'] : null,
                         !empty($ejercicio['tiempo_descanso']) ? (int)$ejercicio['tiempo_descanso'] : null,
+                        $ejercicio['tipo_configuracion'] ?? 'repeticiones',
+                        !empty($ejercicio['peso_kg']) ? (float)$ejercicio['peso_kg'] : null,
+                        !empty($ejercicio['repeticiones_por_hacer']) ? (int)$ejercicio['repeticiones_por_hacer'] : null,
                         (int)$ejercicioIndex + 1
                     ]);
                 }
@@ -566,7 +574,7 @@ class EntrenamientoModel extends BaseModel {
     public function getProximosEntrenamientos($usuario_id) {
         try {
             $sql = "SELECT 
-                       s.id,
+                       e.id,
                        e.nombre,
                        s.fecha,
                        s.completado
@@ -655,6 +663,73 @@ class EntrenamientoModel extends BaseModel {
         } catch (PDOException $e) {
             error_log("Error al obtener asignaciones recientes: " . $e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * Crea un entrenamiento con bloques y ejercicios
+     * @param array $data Datos del entrenamiento con bloques
+     * @return bool
+     */
+    public function crearConBloques($data) {
+        $this->db->beginTransaction();
+        
+        try {
+            // Insertar el entrenamiento
+            $query = "INSERT INTO {$this->table} (nombre, descripcion, tipo, creado_por) VALUES (?, ?, ?, ?)";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([
+                $data['nombre'],
+                $data['descripcion'] ?? '',
+                $data['tipo'],
+                $_SESSION['user_id']
+            ]);
+            
+            $entrenamiento_id = $this->db->lastInsertId();
+            
+            // Insertar los bloques y ejercicios
+            foreach ($data['bloques'] as $bloqueIndex => $bloque) {
+                $query = "INSERT INTO entrenamiento_bloques 
+                         (entrenamiento_id, nombre, descripcion, orden, serie) 
+                         VALUES (?, ?, ?, ?, ?)";
+                $stmt = $this->db->prepare($query);
+                $stmt->execute([
+                    $entrenamiento_id,
+                    $bloque['nombre'],
+                    $bloque['descripcion'] ?? '',
+                    (int)$bloqueIndex + 1,
+                    $bloque['serie'] ?? 1
+                ]);
+                
+                $bloque_id = $this->db->lastInsertId();
+                
+                foreach ($bloque['ejercicios'] as $ejercicioIndex => $ejercicio) {
+                    $query = "INSERT INTO entrenamiento_ejercicios 
+                             (entrenamiento_id, bloque_id, ejercicio_id, tiempo, repeticiones, tiempo_descanso, 
+                              tipo_configuracion, peso_kg, repeticiones_por_hacer, orden) 
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    $stmt = $this->db->prepare($query);
+                    $stmt->execute([
+                        $entrenamiento_id,
+                        $bloque_id,
+                        $ejercicio['ejercicio_id'],
+                        !empty($ejercicio['tiempo']) ? (int)$ejercicio['tiempo'] : null,
+                        !empty($ejercicio['repeticiones']) ? (int)$ejercicio['repeticiones'] : null,
+                        !empty($ejercicio['tiempo_descanso']) ? (int)$ejercicio['tiempo_descanso'] : null,
+                        $ejercicio['tipo_configuracion'] ?? 'repeticiones',
+                        !empty($ejercicio['peso_kg']) ? (float)$ejercicio['peso_kg'] : null,
+                        !empty($ejercicio['repeticiones_por_hacer']) ? (int)$ejercicio['repeticiones_por_hacer'] : null,
+                        (int)$ejercicioIndex + 1
+                    ]);
+                }
+            }
+            
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error al crear entrenamiento con bloques: " . $e->getMessage());
+            return false;
         }
     }
 } 

@@ -222,7 +222,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="/dashboard">
+            <a class="navbar-brand" href="/">
                 <img src="/img/logo.png" alt="Logo" height="50">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -236,6 +236,13 @@
                                 <i class="fas fa-home me-1"></i> Inicio
                             </a>
                         </li>
+                        <?php if ($_SESSION['user_role'] === 'entrenado'): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/entrenamientos">
+                                <i class="fas fa-clipboard-list me-1"></i> Mis Entrenamientos
+                            </a>
+                        </li>
+                        <?php endif; ?>
                         <?php if ($_SESSION['user_role'] === 'entrenador' || $_SESSION['user_role'] === 'admin'): ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="dataDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -252,9 +259,9 @@
                                             <i class="fas fa-dumbbell me-1"></i> Tipos de Ejercicios
                                         </a>
                                     </li>
-                                    <li class="nav-item">
+                                    <li class="nav-item">   
                                         <a class="dropdown-item" href="/entrenamientos">
-                                            <i class="fas fa-clipboard-list me-1"></i> Entrenamientos
+                                            <i class="fas fa-dumbbell me-1"></i> Entrenamientos
                                         </a>
                                     </li>
                                     <li class="nav-item">
