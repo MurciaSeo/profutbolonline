@@ -10,3 +10,42 @@
 [07-Jul-2025 08:06:58 UTC] PHP Warning:  Undefined variable $dbname in /home/profutbolonline/public_html/test_solucion_final.php on line 6
 [07-Jul-2025 08:06:58 UTC] PHP Warning:  Undefined variable $username in /home/profutbolonline/public_html/test_solucion_final.php on line 6
 [07-Jul-2025 08:06:58 UTC] PHP Warning:  Undefined variable $password in /home/profutbolonline/public_html/test_solucion_final.php on line 6
+[07-Jul-2025 09:15:48 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method ProgramacionModel::obtenerConDetalles() in Command line code:1
+Stack trace:
+#0 {main}
+  thrown in Command line code on line 1
+[07-Jul-2025 09:15:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method ProgramacionModel::obtenerTodos() in Command line code:1
+Stack trace:
+#0 {main}
+  thrown in Command line code on line 1
+[07-Jul-2025 09:15:59 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "DB_HOST" in Command line code:1
+Stack trace:
+#0 {main}
+  thrown in Command line code on line 1
+[07-Jul-2025 10:14:55 UTC] Error en ProgramacionUsuarioModel::asignarPrograma: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '5-5' for key 'programacion_usuarios.unique_programacion_usuario'
+[07-Jul-2025 10:15:22 UTC] Error en ProgramacionUsuarioModel::asignarPrograma: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '5-50' for key 'programacion_dias_usuarios.unique_usuario_dia'
+[07-Jul-2025 10:42:15 UTC] Error en ProgramacionUsuarioModel::asignarPrograma: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '5-5' for key 'programacion_usuarios.unique_programacion_usuario'
+[07-Jul-2025 14:54:02 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 14:54:02 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 14:54:16 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 14:54:16 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 15:01:57 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 15:01:57 UTC] PHP Warning:  Undefined array key "usuarios_completados" in /home/profutbolonline/public_html/test_programacion_ver.php on line 25
+[07-Jul-2025 15:01:57 UTC] PHP Warning:  Undefined array key "total_usuarios" in /home/profutbolonline/public_html/test_programacion_ver.php on line 26
+[07-Jul-2025 15:01:57 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 15:01:57 UTC] PHP Warning:  Undefined array key "usuarios_completados" in /home/profutbolonline/public_html/test_programacion_ver.php on line 25
+[07-Jul-2025 15:01:57 UTC] PHP Warning:  Undefined array key "total_usuarios" in /home/profutbolonline/public_html/test_programacion_ver.php on line 26
+[07-Jul-2025 15:02:23 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 15:02:23 UTC] PHP Warning:  Undefined array key "usuarios_completados" in /home/profutbolonline/public_html/test_programacion_ver.php on line 25
+[07-Jul-2025 15:02:23 UTC] PHP Warning:  Undefined array key "total_usuarios" in /home/profutbolonline/public_html/test_programacion_ver.php on line 26
+[07-Jul-2025 15:02:23 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 15:02:23 UTC] PHP Warning:  Undefined array key "usuarios_completados" in /home/profutbolonline/public_html/test_programacion_ver.php on line 25
+[07-Jul-2025 15:02:23 UTC] PHP Warning:  Undefined array key "total_usuarios" in /home/profutbolonline/public_html/test_programacion_ver.php on line 26
+[07-Jul-2025 15:19:06 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 15:19:06 UTC] PHP Warning:  Undefined array key "usuarios_completados" in /home/profutbolonline/public_html/test_programacion_ver.php on line 25
+[07-Jul-2025 15:19:06 UTC] PHP Warning:  Undefined array key "total_usuarios" in /home/profutbolonline/public_html/test_programacion_ver.php on line 26
+[07-Jul-2025 15:19:06 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_programacion_ver.php on line 22
+[07-Jul-2025 15:19:06 UTC] PHP Warning:  Undefined array key "usuarios_completados" in /home/profutbolonline/public_html/test_programacion_ver.php on line 25
+[07-Jul-2025 15:19:06 UTC] PHP Warning:  Undefined array key "total_usuarios" in /home/profutbolonline/public_html/test_programacion_ver.php on line 26
+[07-Jul-2025 15:19:32 UTC] Error en actualizarProgresoPrograma: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'progreso' in 'field list'
+[07-Jul-2025 15:19:32 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_marcar_sesion.php on line 49

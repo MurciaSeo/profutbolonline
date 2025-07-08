@@ -264,11 +264,6 @@
                                             <i class="fas fa-dumbbell me-1"></i> Entrenamientos
                                         </a>
                                     </li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item" href="/entrenamientos/asignar-rapido">
-                                            <i class="fas fa-plus-circle me-1"></i> Asignar Entrenamiento
-                                        </a>
-                                    </li>
                                     <li><a class="dropdown-item" href="/programaciones"><i class="fas fa-calendar-alt me-2"></i> Programas de Entrenamiento</a></li>
                                 </ul>
                             </li>
@@ -282,9 +277,9 @@
                                 <ul class="dropdown-menu" aria-labelledby="adminDropdown">
                                     <li><a class="dropdown-item" href="/usuarios"><i class="fas fa-users me-2"></i> Gestionar Usuarios</a></li>
                                     <li><a class="dropdown-item" href="/usuarios/crear"><i class="fas fa-user-plus me-2"></i> Crear Usuario</a></li>
-                                    <li><a class="dropdown-item" href="/usuarios/asignar-entrenador"><i class="fas fa-user-tie me-2"></i> Asignar Entrenador</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="/programaciones"><i class="fas fa-calendar-alt me-2"></i> Programas de Entrenamiento</a></li>
+                                    <li><a class="dropdown-item" href="/usuarios/asignar-entrenador"><i class="fas fa-user-tie me-2"></i> Asignar Entrenador</a></li>
+                                    <li><a class="dropdown-item" href="/entrenamientos/asignar-rapido"><i class="fas fa-plus-circle me-1"></i> Asignar Entrenamiento</a></li>
                                     <li><a class="dropdown-item" href="/programacion_usuarios"><i class="fas fa-user-check me-2"></i> Asignar Programas</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="/admin/configuracion"><i class="fas fa-cogs me-2"></i> Configuración</a></li>

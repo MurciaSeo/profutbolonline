@@ -351,6 +351,7 @@ class EntrenamientoModel extends BaseModel {
                         'nombre', eb.nombre,
                         'descripcion', eb.descripcion,
                         'orden', eb.orden,
+                        'serie', eb.serie,
                         'ejercicios', (
                             SELECT JSON_ARRAYAGG(
                                 JSON_OBJECT(

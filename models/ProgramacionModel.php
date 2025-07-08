@@ -303,14 +303,29 @@ class ProgramacionModel extends BaseModel {
                     ];
                 }
                 
-                // Verificar si el día está completado usando programacion_dias_usuarios
-                $sql = "SELECT completado 
-                        FROM programacion_dias_usuarios 
-                        WHERE dia_id = ? AND usuario_id = ?";
+                // Obtener el estado de las sesiones específicas para cada usuario asignado
+                $sql = "SELECT s.usuario_id, s.completado, s.fecha_completado, s.valorado, u.nombre, u.apellido
+                        FROM sesiones s
+                        JOIN usuarios u ON s.usuario_id = u.id
+                        WHERE s.programacion_id = ? AND s.dia_id = ? AND s.entrenamiento_id = ?
+                        ORDER BY u.nombre, u.apellido";
                 $stmt = $this->db->prepare($sql);
-                $stmt->execute([$dia['id'], $usuario_id]);
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                $dia['completado'] = $result ? $result['completado'] : false;
+                $stmt->execute([$id, $dia['id'], $dia['entrenamiento_id']]);
+                $estados_sesiones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                $dia['estados_sesiones'] = $estados_sesiones;
+                
+                // Calcular estadísticas del estado basado en sesiones
+                $total_sesiones = count($estados_sesiones);
+                $sesiones_completadas = count(array_filter($estados_sesiones, function($s) {
+                    return $s['completado'] == 1;
+                }));
+                
+                $dia['estadisticas'] = [
+                    'total_sesiones' => $total_sesiones,
+                    'sesiones_completadas' => $sesiones_completadas,
+                    'porcentaje_completado' => $total_sesiones > 0 ? round(($sesiones_completadas / $total_sesiones) * 100) : 0
+                ];
             }
             
             $semana['dias'] = $dias;
@@ -450,6 +465,46 @@ class ProgramacionModel extends BaseModel {
         } catch (PDOException $e) {
             error_log("Error en actualizarProgresoPrograma: " . $e->getMessage());
             return false;
+        }
+    }
+
+    public function marcarSesionCompletada($programacion_id, $usuario_id, $dia_id, $entrenamiento_id) {
+        try {
+            $this->db->beginTransaction();
+
+            // Verificar si existe la sesión
+            $sql = "SELECT id FROM sesiones 
+                    WHERE programacion_id = ? AND usuario_id = ? AND dia_id = ? AND entrenamiento_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$programacion_id, $usuario_id, $dia_id, $entrenamiento_id]);
+            $sesion = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($sesion) {
+                // Actualizar la sesión existente
+                $sql = "UPDATE sesiones 
+                        SET completado = 1, fecha_completado = NOW() 
+                        WHERE id = ?";
+                $stmt = $this->db->prepare($sql);
+                $success = $stmt->execute([$sesion['id']]);
+            } else {
+                // Crear nueva sesión si no existe
+                $sql = "INSERT INTO sesiones (programacion_id, usuario_id, dia_id, entrenamiento_id, completado, fecha_completado) 
+                        VALUES (?, ?, ?, ?, 1, NOW())";
+                $stmt = $this->db->prepare($sql);
+                $success = $stmt->execute([$programacion_id, $usuario_id, $dia_id, $entrenamiento_id]);
+            }
+
+            if ($success) {
+                // Actualizar el progreso del programa
+                $this->actualizarProgresoPrograma($programacion_id, $usuario_id);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error en ProgramacionModel::marcarSesionCompletada: " . $e->getMessage());
+            throw new Exception("Error al marcar la sesión como completada");
         }
     }
 

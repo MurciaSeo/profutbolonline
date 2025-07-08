@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:3306
--- Tiempo de generación: 07-07-2025 a las 08:26:32
+-- Tiempo de generación: 07-07-2025 a las 10:50:21
 -- Versión del servidor: 8.0.42
 -- Versión de PHP: 8.3.22
 
@@ -106,7 +106,7 @@ INSERT INTO `ejercicios` (`id`, `nombre`, `descripcion`, `tipo_id`, `video_url`,
 (34, 'Caminata en línea recta', 'Caminar en línea colocando un pie delante del otro.', 4, NULL, '2025-05-01 06:56:17'),
 (35, 'Equilibrio con bosu', 'Mantener el equilibrio sobre una base inestable.', 4, NULL, '2025-05-01 06:56:17'),
 (36, 'Sentadilla a una pierna', 'Ejercicio unilateral para fuerza y coordinación.', 4, NULL, '2025-05-01 06:56:17'),
-(37, 'Elevación de pierna lateral', 'Levantar una pierna de lado para trabajar glúteos y estabilidad.', 4, NULL, '2025-05-01 06:56:17'),
+(37, 'Elevación de pierna lateral', 'Levantar una pierna de lado para trabajar glúteos y estabilidad.', 4, 'https://youtu.be/Kc7QVoRZTwE?si=7X64vSu0-xDe9OCT', '2025-05-01 06:56:17'),
 (38, 'Plancha con elevación de brazo', 'Plancha normal añadiendo levantamiento de brazo alternado.', 4, NULL, '2025-05-01 06:56:17'),
 (39, 'Giros con balón en una pierna', 'Rotar el torso con balón mientras se mantiene una pierna elevada.', 4, NULL, '2025-05-01 06:56:17'),
 (40, 'Desplante cruzado', 'Cruzar una pierna detrás de la otra al hacer desplante.', 4, NULL, '2025-05-01 06:56:17'),
@@ -185,15 +185,16 @@ CREATE TABLE `entrenamiento_bloques` (
   `nombre` varchar(100) NOT NULL,
   `descripcion` text,
   `orden` int NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `serie` int NOT NULL DEFAULT '1' COMMENT 'Número de veces que se repite el bloque'
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Volcado de datos para la tabla `entrenamiento_bloques`
 --
 
-INSERT INTO `entrenamiento_bloques` (`id`, `entrenamiento_id`, `nombre`, `descripcion`, `orden`, `created_at`) VALUES
-(43, 11, 'Calentamiento', '', 1, '2025-05-31 11:26:45');
+INSERT INTO `entrenamiento_bloques` (`id`, `entrenamiento_id`, `nombre`, `descripcion`, `orden`, `created_at`, `serie`) VALUES
+(44, 11, 'Calentamiento', '', 1, '2025-07-07 06:57:34', 3);
 
 -- --------------------------------------------------------
 
@@ -208,6 +209,9 @@ CREATE TABLE `entrenamiento_ejercicios` (
   `tiempo` int DEFAULT NULL,
   `repeticiones` int DEFAULT NULL,
   `tiempo_descanso` int NOT NULL,
+  `tipo_configuracion` enum('tiempo','repeticiones','repeticiones_reserva') DEFAULT 'repeticiones',
+  `peso_kg` decimal(5,2) DEFAULT NULL,
+  `repeticiones_por_hacer` int DEFAULT NULL,
   `orden` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `bloque_id` int DEFAULT NULL
@@ -217,9 +221,9 @@ CREATE TABLE `entrenamiento_ejercicios` (
 -- Volcado de datos para la tabla `entrenamiento_ejercicios`
 --
 
-INSERT INTO `entrenamiento_ejercicios` (`id`, `entrenamiento_id`, `ejercicio_id`, `tiempo`, `repeticiones`, `tiempo_descanso`, `orden`, `created_at`, `bloque_id`) VALUES
-(75, 11, 37, 45, 3, 15, 2, '2025-05-31 11:26:45', 43),
-(74, 11, 74, 45, 4, 60, 1, '2025-05-31 11:26:45', 43);
+INSERT INTO `entrenamiento_ejercicios` (`id`, `entrenamiento_id`, `ejercicio_id`, `tiempo`, `repeticiones`, `tiempo_descanso`, `tipo_configuracion`, `peso_kg`, `repeticiones_por_hacer`, `orden`, `created_at`, `bloque_id`) VALUES
+(77, 11, 37, 45, 3, 15, 'repeticiones', NULL, NULL, 2, '2025-07-07 06:57:34', 44),
+(76, 11, 58, 45, 4, 15, 'repeticiones', NULL, NULL, 1, '2025-07-07 06:57:34', 44);
 
 -- --------------------------------------------------------
 
@@ -409,10 +413,10 @@ CREATE TABLE `sesiones` (
 --
 
 INSERT INTO `sesiones` (`id`, `entrenamiento_id`, `usuario_id`, `fecha`, `notas`, `completado`, `fecha_completado`, `valorado`, `created_at`) VALUES
-(1, 6, 5, '2025-05-02', 'vamos', 1, '2025-05-02 11:13:44', 1, '2025-05-02 09:03:48'),
-(2, 10, 5, '2025-05-02', 'hazlo antes de comer', 1, '2025-05-02 11:49:31', 1, '2025-05-02 09:48:38'),
 (3, 11, 8, '2025-06-02', 'vamos a trabajar fuerza', 1, '2025-05-31 13:27:49', 1, '2025-05-31 11:27:19'),
-(4, 11, 4, '2025-06-06', NULL, 0, NULL, 0, '2025-05-31 11:44:12');
+(6, 11, 4, '2025-07-07', 'Entrenamiento asignado automáticamente', 0, NULL, 0, '2025-07-07 07:53:57'),
+(5, 11, 5, '2025-07-07', NULL, 1, '2025-07-07 08:58:05', 1, '2025-07-07 06:33:09'),
+(7, 11, 6, '2025-07-07', 'Entrenamiento asignado automáticamente', 0, NULL, 0, '2025-07-07 07:53:57');
 
 -- --------------------------------------------------------
 
@@ -509,7 +513,8 @@ INSERT INTO `valoraciones_entrenamientos` (`id`, `entrenamiento_id`, `usuario_id
 (17, 4, 5, 30, NULL, 5, 5, 5, 5, 'muy bueno', '2025-05-02 09:28:10'),
 (18, 10, 5, 0, 2, 5, 5, 4, 5, 'comentario', '2025-05-02 09:49:42'),
 (19, 10, 4, 44, NULL, 5, 4, 3, 2, 'hecho', '2025-05-02 09:50:23'),
-(20, 11, 8, 0, 3, 5, 4, 5, 4, 'asf', '2025-05-31 11:33:26');
+(20, 11, 8, 0, 3, 5, 4, 5, 4, 'asf', '2025-05-31 11:33:26'),
+(24, 11, 5, 0, 5, 5, 5, 5, 5, 'gfhfgd', '2025-07-07 07:00:53');
 
 --
 -- Índices para tablas volcadas
@@ -645,13 +650,13 @@ ALTER TABLE `entrenamientos`
 -- AUTO_INCREMENT de la tabla `entrenamiento_bloques`
 --
 ALTER TABLE `entrenamiento_bloques`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT de la tabla `entrenamiento_ejercicios`
 --
 ALTER TABLE `entrenamiento_ejercicios`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
 
 --
 -- AUTO_INCREMENT de la tabla `programaciones`
@@ -687,7 +692,7 @@ ALTER TABLE `programacion_usuarios`
 -- AUTO_INCREMENT de la tabla `sesiones`
 --
 ALTER TABLE `sesiones`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `tipos_ejercicios`
@@ -705,7 +710,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `valoraciones_entrenamientos`
 --
 ALTER TABLE `valoraciones_entrenamientos`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

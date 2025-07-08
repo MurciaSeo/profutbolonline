@@ -215,10 +215,10 @@
                                 <tr>
                                     <td><?php echo htmlspecialchars($entrenamiento['nombre']); ?></td>
                                     <td><?php echo htmlspecialchars($entrenamiento['usuario']); ?></td>
-                                    <td><?php echo date('d/m/Y', strtotime($entrenamiento['fecha'])); ?></td>
+                                    <td><?php echo isset($entrenamiento['fecha']) ? date('d/m/Y', strtotime($entrenamiento['fecha'])) : 'N/A'; ?></td>
                                     <td>
-                                        <span class="badge bg-<?php echo $entrenamiento['completado'] ? 'success' : 'primary'; ?>">
-                                            <?php echo $entrenamiento['completado'] ? 'Completado' : 'En Progreso'; ?>
+                                        <span class="badge bg-<?php echo isset($entrenamiento['completado']) && $entrenamiento['completado'] ? 'success' : 'primary'; ?>">
+                                            <?php echo isset($entrenamiento['completado']) && $entrenamiento['completado'] ? 'Completado' : 'En Progreso'; ?>
                                         </span>
                                     </td>
                                 </tr>
@@ -534,7 +534,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="/programas/ver/<?php echo $programa['id']; ?>" class="btn btn-sm btn-info">
+                                        <a href="/programaciones/ver/<?php echo $programa['id']; ?>" class="btn btn-sm btn-info">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </td>

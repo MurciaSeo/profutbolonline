@@ -8,39 +8,80 @@ class ProgramacionUsuarioModel extends BaseModel {
         try {
             $this->db->beginTransaction();
             
-            // Insertar en programacion_usuarios
-            $sql = "INSERT INTO programacion_usuarios (programacion_id, usuario_id, fecha_inicio, fecha_fin, estado) 
-                    VALUES (?, ?, ?, ?, ?)";
-            
+            // Verificar si ya existe una asignación para este usuario y programa
+            $sql = "SELECT id FROM programacion_usuarios WHERE usuario_id = ? AND programacion_id = ?";
             $stmt = $this->db->prepare($sql);
-            $estado = $data['estado'] ?? 'activo';
-            $fecha_fin = $data['fecha_fin'] ?? null;
+            $stmt->execute([$data['usuario_id'], $data['programacion_id']]);
+            $asignacion_existente = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            $stmt->execute([
-                $data['programacion_id'],
-                $data['usuario_id'],
-                $data['fecha_inicio'],
-                $fecha_fin,
-                $estado
-            ]);
+            if ($asignacion_existente) {
+                // Si ya existe, actualizar la fecha de inicio
+                $sql = "UPDATE programacion_usuarios 
+                        SET fecha_inicio = ?, estado = ?, fecha_fin = NULL 
+                        WHERE usuario_id = ? AND programacion_id = ?";
+                $stmt = $this->db->prepare($sql);
+                $estado = $data['estado'] ?? 'activo';
+                $stmt->execute([$data['fecha_inicio'], $estado, $data['usuario_id'], $data['programacion_id']]);
+            } else {
+                // Insertar nueva asignación
+                $sql = "INSERT INTO programacion_usuarios (programacion_id, usuario_id, fecha_inicio, fecha_fin, estado) 
+                        VALUES (?, ?, ?, ?, ?)";
+                $stmt = $this->db->prepare($sql);
+                $estado = $data['estado'] ?? 'activo';
+                $fecha_fin = $data['fecha_fin'] ?? null;
+                
+                $stmt->execute([
+                    $data['programacion_id'],
+                    $data['usuario_id'],
+                    $data['fecha_inicio'],
+                    $fecha_fin,
+                    $estado
+                ]);
+            }
 
-            // Obtener todos los días de la programación
-            $sql = "SELECT pd.id as dia_id 
+            // Obtener todos los días de la programación con sus entrenamientos
+            $sql = "SELECT pd.id as dia_id, pd.entrenamiento_id, ps.numero_semana, pd.dia_semana
                     FROM programacion_dias pd 
                     JOIN programacion_semanas ps ON pd.semana_id = ps.id 
-                    WHERE ps.programacion_id = ?";
+                    WHERE ps.programacion_id = ? AND pd.entrenamiento_id IS NOT NULL";
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$data['programacion_id']]);
             $dias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Crear registros en programacion_dias_usuarios para cada día
-            $sql = "INSERT INTO programacion_dias_usuarios (usuario_id, dia_id, completado) 
+            // Crear registros en programacion_dias_usuarios para cada día (usando INSERT IGNORE)
+            $sql = "INSERT IGNORE INTO programacion_dias_usuarios (usuario_id, dia_id, completado) 
                     VALUES (?, ?, 0)";
             $stmt = $this->db->prepare($sql);
 
             foreach ($dias as $dia) {
                 $stmt->execute([$data['usuario_id'], $dia['dia_id']]);
+            }
+
+            // Crear sesiones individuales para cada entrenamiento del programa
+            $sql = "INSERT INTO sesiones (entrenamiento_id, usuario_id, fecha, notas, programacion_id, semana_id, dia_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $this->db->prepare($sql);
+
+            foreach ($dias as $dia) {
+                // Calcular la fecha del entrenamiento basada en la semana y día
+                $fecha_entrenamiento = $this->calcularFechaEntrenamiento(
+                    $data['fecha_inicio'], 
+                    $dia['numero_semana'], 
+                    $dia['dia_semana']
+                );
+                
+                $notas = "Entrenamiento asignado automáticamente desde programa";
+                
+                $stmt->execute([
+                    $dia['entrenamiento_id'],
+                    $data['usuario_id'],
+                    $fecha_entrenamiento,
+                    $notas,
+                    $data['programacion_id'],
+                    $dia['numero_semana'],
+                    $dia['dia_id']
+                ]);
             }
 
             $this->db->commit();
@@ -50,6 +91,36 @@ class ProgramacionUsuarioModel extends BaseModel {
             error_log("Error en ProgramacionUsuarioModel::asignarPrograma: " . $e->getMessage());
             throw new Exception("Error al asignar el programa al usuario");
         }
+    }
+
+    /**
+     * Calcula la fecha de un entrenamiento basada en la fecha de inicio del programa,
+     * la semana y el día de la semana
+     */
+    private function calcularFechaEntrenamiento($fecha_inicio, $numero_semana, $dia_semana) {
+        // Convertir fecha de inicio a DateTime
+        $fecha_inicio_dt = new DateTime($fecha_inicio);
+        
+        // Calcular días desde el inicio hasta la semana correspondiente
+        $dias_hasta_semana = ($numero_semana - 1) * 7;
+        
+        // Calcular días desde el lunes de esa semana hasta el día específico
+        // 1 = Lunes, 2 = Martes, ..., 7 = Domingo
+        $dias_desde_lunes = $dia_semana - 1;
+        
+        // Calcular el lunes de la semana correspondiente
+        $lunes_semana = clone $fecha_inicio_dt;
+        $lunes_semana->add(new DateInterval("P{$dias_hasta_semana}D"));
+        
+        // Ajustar al lunes de esa semana
+        $dias_hasta_lunes = $lunes_semana->format('N') - 1; // N = 1 (Lunes) a 7 (Domingo)
+        $lunes_semana->sub(new DateInterval("P{$dias_hasta_lunes}D"));
+        
+        // Calcular la fecha final del entrenamiento
+        $fecha_entrenamiento = clone $lunes_semana;
+        $fecha_entrenamiento->add(new DateInterval("P{$dias_desde_lunes}D"));
+        
+        return $fecha_entrenamiento->format('Y-m-d');
     }
 
     public function getProgramasAsignados($usuario_id) {

@@ -1,12 +1,39 @@
 <?php require_once 'views/layouts/header.php'; ?>
 
-
+<style>
+/* Estilos para YouTube Shorts (relación 9:16) */
+.ratio-9x16 {
+    --bs-aspect-ratio: 177.78%; /* 16/9 * 100 = 177.78% */
+}
+</style>
 
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1><?php echo htmlspecialchars($entrenamiento['nombre']); ?></h1>
+                <div>
+                    <h1><?php echo htmlspecialchars($entrenamiento['nombre']); ?></h1>
+                    <?php if (isset($entrenamiento['tipo'])): ?>
+                        <?php 
+                        $tipos_entrenamiento = [
+                            1 => 'Fuerza',
+                            2 => 'Cardio', 
+                            3 => 'Flexibilidad',
+                            4 => 'Equilibrio',
+                            5 => 'Core',
+                            6 => 'Movilidad',
+                            7 => 'Potencia',
+                            8 => 'Recuperación',
+                            10 => 'Mixto'
+                        ];
+                        $tipo_nombre = $tipos_entrenamiento[$entrenamiento['tipo']] ?? 'No especificado';
+                        ?>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-dumbbell me-2"></i>
+                            Tipo: <span class="badge bg-info"><?php echo $tipo_nombre; ?></span>
+                        </p>
+                    <?php endif; ?>
+                </div>
                 <div>
                     <?php if ($_SESSION['user_role'] === 'entrenado' && isset($sesion) && $sesion): ?>
                         <?php if (!$sesion['completado']): ?>
@@ -109,10 +136,10 @@
                         <h5 class="mb-0">
                             <span class="badge bg-primary me-2">Bloque <?php echo $bloque['orden']; ?></span>
                             <?php echo htmlspecialchars($bloque['nombre']); ?>
-                            <span class="badge bg-info ms-2">
-                                <?php echo (isset($bloque['serie']) ? $bloque['serie'] : 1); ?> serie<?php echo ((isset($bloque['serie']) ? $bloque['serie'] : 1) > 1 ? 's' : ''); ?>
-                            </span>
                         </h5>
+                        <span class="badge bg-danger ms-2" style="font-size: 1.5em;float: right;">
+                                <i class="fas fa-recycle"></i> <?php echo (isset($bloque['serie']) ? $bloque['serie'] : 1); ?> serie<?php echo ((isset($bloque['serie']) ? $bloque['serie'] : 1) > 1 ? 's' : ''); ?>
+                        </span>
                         <?php if (!empty($bloque['descripcion'])): ?>
                             <small class="text-muted"><?php echo htmlspecialchars($bloque['descripcion']); ?></small>
                         <?php endif; ?>
@@ -130,7 +157,15 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($bloque['ejercicios'] as $ejercicio): ?>
+                                        <?php 
+                                        // Ordenar ejercicios por el campo 'orden'
+                                        if (isset($bloque['ejercicios']) && is_array($bloque['ejercicios'])) {
+                                            usort($bloque['ejercicios'], function($a, $b) {
+                                                return ($a['orden'] ?? 0) - ($b['orden'] ?? 0);
+                                            });
+                                        }
+                                        foreach ($bloque['ejercicios'] as $ejercicio): 
+                                        ?>
                                         <tr>
                                             <td>
                                                 <strong><?php echo htmlspecialchars($ejercicio['nombre']); ?></strong>
@@ -160,6 +195,9 @@
                                                     default: // repeticiones
                                                         echo '<span class="badge bg-primary me-2">Por Repeticiones</span>';
                                                         echo $ejercicio['repeticiones'] ? htmlspecialchars($ejercicio['repeticiones']) . ' rep' : '-';
+                                                        if ($ejercicio['peso_kg']) {
+                                                            echo '<br><small class="text-muted">Peso: ' . htmlspecialchars($ejercicio['peso_kg']) . ' kg</small>';
+                                                        }
                                                         break;
                                                 }
                                                 ?>
@@ -303,16 +341,21 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="ratio ratio-16x9">
+                <div class="ratio ratio-16x9" id="videoContainer">
                     <iframe id="videoFrame" src="" allowfullscreen 
                             onload="console.log('Video loaded successfully')"
                             onerror="console.log('Error loading video')"></iframe>
                 </div>
                 <div id="videoError" class="alert alert-warning mt-3" style="display: none;">
                     <i class="fas fa-exclamation-triangle"></i>
-                    No se pudo cargar el video. Esto puede deberse a restricciones del sitio web.
-                    <br>
-                    <a href="#" id="openVideoLink" target="_blank" class="btn btn-sm btn-primary mt-2">
+                    <strong>Problema al cargar el video</strong><br>
+                    Si el video no se reproduce automáticamente, puedes intentar:
+                    <ul class="mt-2 mb-2">
+                        <li>Hacer clic en el botón de reproducción dentro del reproductor</li>
+                        <li>Verificar tu conexión a internet</li>
+                        <li>Abrir el video directamente en YouTube</li>
+                    </ul>
+                    <a href="#" id="openVideoLink" target="_blank" class="btn btn-sm btn-primary">
                         <i class="fas fa-external-link-alt"></i> Abrir en YouTube
                     </a>
                 </div>
@@ -341,6 +384,10 @@ function convertToEmbedUrl(url) {
     // Formato: https://youtu.be/VIDEO_ID
     else if (url.includes('youtu.be/')) {
         videoId = url.split('youtu.be/')[1];
+    }
+    // Formato: https://www.youtube.com/shorts/VIDEO_ID (YouTube Shorts)
+    else if (url.includes('youtube.com/shorts/')) {
+        videoId = url.split('youtube.com/shorts/')[1];
     }
     // Formato: https://www.youtube.com/embed/VIDEO_ID
     else if (url.includes('youtube.com/embed/')) {
@@ -388,6 +435,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Configurar el enlace alternativo
             openVideoLink.href = videoUrl;
             
+            // Detectar si es un Shorts y ajustar la relación de aspecto
+            const videoContainer = document.getElementById('videoContainer');
+            if (videoUrl.includes('youtube.com/shorts/') || videoUrl.includes('youtu.be/') && videoUrl.includes('shorts')) {
+                // Para Shorts, usar relación 9:16 (vertical)
+                videoContainer.className = 'ratio ratio-9x16';
+                videoContainer.style.maxWidth = '400px';
+                videoContainer.style.margin = '0 auto';
+            } else {
+                // Para videos normales, usar relación 16:9 (horizontal)
+                videoContainer.className = 'ratio ratio-16x9';
+                videoContainer.style.maxWidth = 'none';
+                videoContainer.style.margin = '0';
+            }
+            
             // Intentar cargar el video
             videoFrame.src = embedUrl;
             videoModal.show();
@@ -395,16 +456,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Verificar si el video se carga correctamente después de un tiempo
             setTimeout(() => {
                 try {
+                    // Intentar acceder al contenido del iframe (esto fallará por políticas CORS)
                     const iframeDoc = videoFrame.contentDocument || videoFrame.contentWindow.document;
-                    if (!iframeDoc || iframeDoc.body.innerHTML.includes('error') || iframeDoc.body.innerHTML.includes('denied')) {
-                        console.log('Video failed to load, showing error message');
-                        videoError.style.display = 'block';
-                    }
+                    // Si llegamos aquí, significa que el video se cargó correctamente
+                    console.log('Video loaded successfully');
                 } catch (e) {
-                    console.log('Cross-origin error, video might be blocked');
-                    videoError.style.display = 'block';
+                    // Error de CORS es normal para YouTube, no significa que el video no funcione
+                    console.log('CORS error (normal for YouTube), video should be working');
+                    // No mostrar error porque el video probablemente funciona
                 }
-            }, 3000);
+            }, 2000);
         });
     });
     

@@ -599,6 +599,23 @@ class EntrenamientoController extends BaseController {
             </div>
         ';
         
+        // Información adicional del entrenamiento
+        if (isset($entrenamiento['tipo'])) {
+            $tipos_entrenamiento = [
+                1 => 'Fuerza',
+                2 => 'Cardio',
+                3 => 'Flexibilidad',
+                4 => 'Equilibrio',
+                5 => 'Core',
+                6 => 'Movilidad',
+                7 => 'Potencia',
+                8 => 'Recuperación',
+                10 => 'Mixto'
+            ];
+            $tipo_nombre = $tipos_entrenamiento[$entrenamiento['tipo']] ?? 'No especificado';
+            $html .= '<div class="description">Tipo de entrenamiento: <strong>' . $tipo_nombre . '</strong></div>';
+        }
+        
         // Descripción
         if (!empty($entrenamiento['descripcion'])) {
             $html .= '<div class="description">' . nl2br(htmlspecialchars($entrenamiento['descripcion'])) . '</div>';
@@ -619,16 +636,40 @@ class EntrenamientoController extends BaseController {
                 });
                 $html .= '<table>
                     <tr>
-                        <th width="40%">Ejercicio</th>
-                        <th width="15%">Repeticiones</th>
-                        <th width="15%">Tiempo</th>
+                        <th width="35%">Ejercicio</th>
+                        <th width="20%">Configuración</th>
                         <th width="15%">Descanso</th>
                     </tr>';
                 foreach ($bloque['ejercicios'] as $ejercicio) {
+                    // Determinar la configuración según el tipo
+                    $configuracion = '';
+                    $tipo_config = $ejercicio['tipo_configuracion'] ?? 'repeticiones';
+                    
+                    switch($tipo_config) {
+                        case 'tiempo':
+                            $configuracion = '<strong>Por Tiempo:</strong> ' . ($ejercicio['tiempo'] ? $ejercicio['tiempo'] . ' seg' : '-');
+                            break;
+                        case 'repeticiones_reserva':
+                            $configuracion = '<strong>Por Repeticiones + Reserva:</strong><br>';
+                            $configuracion .= 'Rep: ' . ($ejercicio['repeticiones'] ?? '-');
+                            if ($ejercicio['peso_kg']) {
+                                $configuracion .= '<br>Peso: ' . $ejercicio['peso_kg'] . ' kg';
+                            }
+                            if ($ejercicio['repeticiones_por_hacer']) {
+                                $configuracion .= '<br>Rep. por hacer: ' . $ejercicio['repeticiones_por_hacer'];
+                            }
+                            break;
+                        default: // repeticiones
+                            $configuracion = '<strong>Por Repeticiones:</strong> ' . ($ejercicio['repeticiones'] ?? '-');
+                            if ($ejercicio['peso_kg']) {
+                                $configuracion .= '<br>Peso: ' . $ejercicio['peso_kg'] . ' kg';
+                            }
+                            break;
+                    }
+                    
                     $html .= '<tr>
                         <td>' . htmlspecialchars($ejercicio['nombre']) . '</td>
-                        <td>' . ($ejercicio['repeticiones'] ?? '-') . '</td>
-                        <td>' . ($ejercicio['tiempo'] ? $ejercicio['tiempo'] . ' seg' : '-') . '</td>
+                        <td>' . $configuracion . '</td>
                         <td>' . ($ejercicio['tiempo_descanso'] ? $ejercicio['tiempo_descanso'] . ' seg' : '-') . '</td>
                     </tr>';
                 }

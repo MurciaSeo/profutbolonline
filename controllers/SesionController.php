@@ -2,15 +2,18 @@
 require_once 'BaseController.php';
 require_once 'models/SesionModel.php';
 require_once 'models/ValoracionModel.php';
+require_once 'models/ProgramacionModel.php';
 
 class SesionController extends BaseController {
     private $sesionModel;
     private $valoracionModel;
+    private $programacionModel;
     
     public function __construct() {
         parent::__construct();
         $this->sesionModel = new SesionModel();
         $this->valoracionModel = new ValoracionModel();
+        $this->programacionModel = new ProgramacionModel();
     }
     
     public function completar($id) {
@@ -124,5 +127,91 @@ class SesionController extends BaseController {
         $this->render('sesiones/ver', [
             'sesion' => $sesion
         ]);
+    }
+    
+    /**
+     * Marca una sesión como completada
+     */
+    public function marcarCompletada() {
+        $this->requireAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $programacion_id = $_POST['programacion_id'];
+                $usuario_id = $_SESSION['user_id'];
+                $dia_id = $_POST['dia_id'];
+                $entrenamiento_id = $_POST['entrenamiento_id'];
+                
+                // Verificar que el usuario tiene acceso a esta sesión
+                if ($_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'entrenador') {
+                    // Para entrenados, verificar que es su sesión
+                    if ($usuario_id != $_SESSION['user_id']) {
+                        throw new Exception('No tienes permisos para marcar esta sesión');
+                    }
+                }
+                
+                $resultado = $this->programacionModel->marcarSesionCompletada(
+                    $programacion_id, 
+                    $usuario_id, 
+                    $dia_id, 
+                    $entrenamiento_id
+                );
+                
+                if ($resultado) {
+                    $_SESSION['success'] = 'Sesión marcada como completada';
+                } else {
+                    $_SESSION['error'] = 'Error al marcar la sesión como completada';
+                }
+                
+            } catch (Exception $e) {
+                $_SESSION['error'] = $e->getMessage();
+            }
+        }
+        
+        // Redirigir de vuelta a la página del programa
+        $this->redirect('/programaciones/ver/' . $programacion_id);
+    }
+    
+    /**
+     * Marca una sesión como no completada
+     */
+    public function marcarNoCompletada() {
+        $this->requireAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $programacion_id = $_POST['programacion_id'];
+                $usuario_id = $_SESSION['user_id'];
+                $dia_id = $_POST['dia_id'];
+                $entrenamiento_id = $_POST['entrenamiento_id'];
+                
+                // Verificar que el usuario tiene acceso a esta sesión
+                if ($_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'entrenador') {
+                    // Para entrenados, verificar que es su sesión
+                    if ($usuario_id != $_SESSION['user_id']) {
+                        throw new Exception('No tienes permisos para marcar esta sesión');
+                    }
+                }
+                
+                // Actualizar la sesión como no completada
+                $sql = "UPDATE sesiones 
+                        SET completado = 0, fecha_completado = NULL 
+                        WHERE programacion_id = ? AND usuario_id = ? AND dia_id = ? AND entrenamiento_id = ?";
+                $stmt = $this->db->prepare($sql);
+                $resultado = $stmt->execute([$programacion_id, $usuario_id, $dia_id, $entrenamiento_id]);
+                
+                if ($resultado) {
+                    $_SESSION['success'] = 'Sesión marcada como no completada';
+                } else {
+                    $_SESSION['error'] = 'Error al actualizar la sesión';
+                }
+                
+            } catch (Exception $e) {
+                $_SESSION['error'] = $e->getMessage();
+            }
+        }
+        
+        // Redirigir de vuelta a la página del programa
+        $this->redirect('/programaciones/ver/' . $programacion_id);
     }
 } 
