@@ -7,7 +7,7 @@ $breadcrumbs = [
 require_once 'views/layouts/header_mejorado.php'; 
 ?>
 
-<div class="container-fluid py-4">
+<div class="container py-4">
     <div class="row">
         <!-- Saludo personalizado -->
         <div class="col-12 mb-4">
