@@ -41,6 +41,12 @@ switch ($request) {
         $controller->index();
         break;
         
+    case 'admin/dashboard':
+        require __DIR__ . '/controllers/DashboardAdminController.php';
+        $controller = new DashboardAdminController();
+        $controller->index();
+        break;
+        
     case 'ejercicios':
         require __DIR__ . '/controllers/EjercicioController.php';
         $controller = new EjercicioController();
@@ -394,6 +400,141 @@ switch ($request) {
         require __DIR__ . '/controllers/AdminController.php';
         $controller = new AdminController();
         $controller->editarSesion($matches[1]);
+        break;
+        
+    // Rutas de programas y pagos
+    case 'programas/tienda':
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->tienda();
+        break;
+        
+    case (preg_match('/^programas\/comprar\/(\d+)$/', $request, $matches) ? true : false):
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->comprar($matches[1]);
+        break;
+        
+    case 'programas/procesar-pago':
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->procesarPago();
+        break;
+        
+    case 'programas/crear-payment-intent':
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->crearPaymentIntent();
+        break;
+        
+    case 'programas/mis-compras':
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->misCompras();
+        break;
+        
+    case 'programas/gestionar-precios':
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->gestionarPrecios();
+        break;
+        
+    case 'programas/guardar-precio':
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->guardarPrecio();
+        break;
+        
+    case 'programas/estadisticas-ventas':
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->estadisticasVentas();
+        break;
+        
+    case 'programas/webhook-stripe':
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->webhookStripe();
+        break;
+        
+    // Rutas adicionales de programas (ver programa, ver bloque, completar bloque)
+    case (preg_match('/^programas\/ver-programa\/(\d+)$/', $request, $matches) ? true : false):
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->verPrograma($matches[1]);
+        break;
+        
+    case (preg_match('/^programas\/ver-bloque\/(\d+)$/', $request, $matches) ? true : false):
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->verBloque($matches[1]);
+        break;
+        
+    case 'programas/completar-bloque':
+        require __DIR__ . '/controllers/ProgramaController.php';
+        $controller = new ProgramaController();
+        $controller->completarBloque();
+        break;
+        
+    // Rutas de administración de coaching
+    case 'admin/coaching':
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->index();
+        break;
+        
+    case 'admin/coaching/crear':
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->crear();
+        break;
+        
+    case (preg_match('/^admin\/coaching\/editar\/(\d+)$/', $request, $matches) ? true : false):
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->editar($matches[1]);
+        break;
+        
+    case (preg_match('/^admin\/coaching\/eliminar\/(\d+)$/', $request, $matches) ? true : false):
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->eliminar($matches[1]);
+        break;
+        
+    case 'admin/coaching/guardar':
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->guardar();
+        break;
+        
+    case (preg_match('/^admin\/coaching\/bloques\/(\d+)$/', $request, $matches) ? true : false):
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->gestionarBloques($matches[1]);
+        break;
+        
+    case 'admin/coaching/guardar-bloque':
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->guardarBloque();
+        break;
+        
+    case (preg_match('/^admin\/coaching\/eliminar-bloque\/(\d+)$/', $request, $matches) ? true : false):
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->eliminarBloque($matches[1]);
+        break;
+        
+    case 'admin/coaching/suscripciones':
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->suscripciones();
+        break;
+        
+    case 'admin/coaching/estadisticas':
+        require __DIR__ . '/controllers/AdminCoachingController.php';
+        $controller = new AdminCoachingController();
+        $controller->estadisticas();
         break;
         
     // Rutas públicas legales

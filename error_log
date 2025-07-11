@@ -49,3 +49,7 @@ Stack trace:
 [07-Jul-2025 15:19:06 UTC] PHP Warning:  Undefined array key "total_usuarios" in /home/profutbolonline/public_html/test_programacion_ver.php on line 26
 [07-Jul-2025 15:19:32 UTC] Error en actualizarProgresoPrograma: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'progreso' in 'field list'
 [07-Jul-2025 15:19:32 UTC] PHP Warning:  Undefined array key "nombre_entrenamiento" in /home/profutbolonline/public_html/test_marcar_sesion.php on line 49
+[11-Jul-2025 06:57:30 UTC] PHP Warning:  Undefined variable $host in /home/profutbolonline/public_html/insertar_datos_prueba.php on line 6
+[11-Jul-2025 06:57:30 UTC] PHP Warning:  Undefined variable $dbname in /home/profutbolonline/public_html/insertar_datos_prueba.php on line 6
+[11-Jul-2025 06:57:30 UTC] PHP Warning:  Undefined variable $username in /home/profutbolonline/public_html/insertar_datos_prueba.php on line 6
+[11-Jul-2025 06:57:30 UTC] PHP Warning:  Undefined variable $password in /home/profutbolonline/public_html/insertar_datos_prueba.php on line 6

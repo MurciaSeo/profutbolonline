@@ -223,7 +223,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <img src="/img/logo.png" alt="Logo" height="50">
+                <img src="/img/logo.png" alt="Logo" height="100">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -240,6 +240,16 @@
                         <li class="nav-item">
                             <a class="nav-link" href="/entrenamientos">
                                 <i class="fas fa-clipboard-list me-1"></i> Mis Entrenamientos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/programas/tienda">
+                                <i class="fas fa-store me-1"></i> Tienda
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/programas/mis-compras">
+                                <i class="fas fa-shopping-bag me-1"></i> Mis Compras
                             </a>
                         </li>
                         <?php endif; ?>
@@ -275,12 +285,19 @@
                                     <i class="fas fa-cog me-1"></i> Administración
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                    <li><a class="dropdown-item" href="/admin/dashboard"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="/usuarios"><i class="fas fa-users me-2"></i> Gestionar Usuarios</a></li>
                                     <li><a class="dropdown-item" href="/usuarios/crear"><i class="fas fa-user-plus me-2"></i> Crear Usuario</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="/usuarios/asignar-entrenador"><i class="fas fa-user-tie me-2"></i> Asignar Entrenador</a></li>
                                     <li><a class="dropdown-item" href="/entrenamientos/asignar-rapido"><i class="fas fa-plus-circle me-1"></i> Asignar Entrenamiento</a></li>
                                     <li><a class="dropdown-item" href="/programacion_usuarios"><i class="fas fa-user-check me-2"></i> Asignar Programas</a></li>
+                                    <li><a class="dropdown-item" href="/programas/gestionar-precios"><i class="fas fa-tags me-2"></i> Gestionar Precios</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/admin/coaching"><i class="fas fa-graduation-cap me-2"></i> Programas de Coaching</a></li>
+                                    <li><a class="dropdown-item" href="/admin/coaching/suscripciones"><i class="fas fa-users me-2"></i> Suscripciones Coaching</a></li>
+                                    <li><a class="dropdown-item" href="/admin/coaching/estadisticas"><i class="fas fa-chart-line me-2"></i> Estadísticas Coaching</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="/admin/configuracion"><i class="fas fa-cogs me-2"></i> Configuración</a></li>
                                 </ul>

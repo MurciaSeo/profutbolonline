@@ -516,6 +516,181 @@ INSERT INTO `valoraciones_entrenamientos` (`id`, `entrenamiento_id`, `usuario_id
 (20, 11, 8, 0, 3, 5, 4, 5, 4, 'asf', '2025-05-31 11:33:26'),
 (24, 11, 5, 0, 5, 5, 5, 5, 5, 'gfhfgd', '2025-07-07 07:00:53');
 
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pagos`
+--
+
+CREATE TABLE `pagos` (
+  `id` int NOT NULL,
+  `usuario_id` int NOT NULL,
+  `programacion_id` int NOT NULL,
+  `stripe_payment_intent_id` varchar(255) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `moneda` varchar(3) NOT NULL DEFAULT 'EUR',
+  `estado` enum('pendiente','completado','fallido','cancelado') NOT NULL DEFAULT 'pendiente',
+  `fecha_pago` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `programas_precios`
+--
+
+CREATE TABLE `programas_precios` (
+  `id` int NOT NULL,
+  `programacion_id` int NOT NULL,
+  `precio` decimal(10,2) NOT NULL,
+  `moneda` varchar(3) NOT NULL DEFAULT 'EUR',
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Volcado de datos para la tabla `programas_precios`
+--
+
+INSERT INTO `programas_precios` (`id`, `programacion_id`, `precio`, `moneda`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 2, 29.99, 'EUR', 1, '2025-07-07 10:50:21', '2025-07-07 10:50:21'),
+(2, 3, 49.99, 'EUR', 1, '2025-07-07 10:50:21', '2025-07-07 10:50:21'),
+(3, 4, 79.99, 'EUR', 1, '2025-07-07 10:50:21', '2025-07-07 10:50:21');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `programas_coaching`
+--
+
+CREATE TABLE `programas_coaching` (
+  `id` int NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` text,
+  `categoria` enum('nutricion','psicologia','tecnica','fisico','mental','recuperacion') NOT NULL,
+  `duracion_meses` int NOT NULL,
+  `precio_mensual` decimal(10,2) NOT NULL,
+  `moneda` varchar(3) NOT NULL DEFAULT 'EUR',
+  `imagen_url` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `coaching_bloques`
+--
+
+CREATE TABLE `coaching_bloques` (
+  `id` int NOT NULL,
+  `programa_coaching_id` int NOT NULL,
+  `mes` int NOT NULL COMMENT 'Mes en el que se desbloquea (1, 2, 3...)',
+  `titulo` varchar(100) NOT NULL,
+  `descripcion` text,
+  `contenido` longtext,
+  `tipo_contenido` enum('video','texto','pdf','audio','interactivo') NOT NULL DEFAULT 'texto',
+  `url_contenido` varchar(255) DEFAULT NULL,
+  `duracion_minutos` int DEFAULT NULL,
+  `orden` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `suscripciones_coaching`
+--
+
+CREATE TABLE `suscripciones_coaching` (
+  `id` int NOT NULL,
+  `usuario_id` int NOT NULL,
+  `programa_coaching_id` int NOT NULL,
+  `stripe_subscription_id` varchar(255) DEFAULT NULL,
+  `estado` enum('activa','cancelada','pausada','expirada') NOT NULL DEFAULT 'activa',
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date DEFAULT NULL,
+  `mes_actual` int NOT NULL DEFAULT '1' COMMENT 'Mes actual de la suscripción',
+  `ultimo_pago` datetime DEFAULT NULL,
+  `proximo_pago` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `accesos_bloques`
+--
+
+CREATE TABLE `accesos_bloques` (
+  `id` int NOT NULL,
+  `usuario_id` int NOT NULL,
+  `bloque_id` int NOT NULL,
+  `suscripcion_id` int NOT NULL,
+  `desbloqueado` tinyint(1) NOT NULL DEFAULT '0',
+  `fecha_desbloqueo` datetime DEFAULT NULL,
+  `completado` tinyint(1) NOT NULL DEFAULT '0',
+  `fecha_completado` datetime DEFAULT NULL,
+  `progreso` int DEFAULT '0' COMMENT 'Porcentaje de progreso (0-100)',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pagos_suscripcion`
+--
+
+CREATE TABLE `pagos_suscripcion` (
+  `id` int NOT NULL,
+  `suscripcion_id` int NOT NULL,
+  `stripe_payment_intent_id` varchar(255) NOT NULL,
+  `mes` int NOT NULL COMMENT 'Mes correspondiente al pago',
+  `monto` decimal(10,2) NOT NULL,
+  `moneda` varchar(3) NOT NULL DEFAULT 'EUR',
+  `estado` enum('pendiente','completado','fallido','cancelado') NOT NULL DEFAULT 'pendiente',
+  `fecha_pago` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Volcado de datos para la tabla `programas_coaching`
+--
+
+INSERT INTO `programas_coaching` (`id`, `nombre`, `descripcion`, `categoria`, `duracion_meses`, `precio_mensual`, `moneda`, `imagen_url`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 'Nutrición Deportiva Avanzada', 'Programa completo de nutrición para deportistas que quieren optimizar su rendimiento y recuperación', 'nutricion', 6, 19.99, 'EUR', '/img/programas/nutricion.jpg', 1, '2025-07-07 10:50:21', '2025-07-07 10:50:21'),
+(2, 'Psicología del Deportista', 'Desarrolla la mentalidad ganadora y supera los obstáculos mentales en tu deporte', 'psicologia', 8, 24.99, 'EUR', '/img/programas/psicologia.jpg', 1, '2025-07-07 10:50:21', '2025-07-07 10:50:21'),
+(3, 'Técnica de Fútbol Profesional', 'Mejora tu técnica individual y táctica de equipo con metodología de élite', 'tecnica', 10, 29.99, 'EUR', '/img/programas/tecnica.jpg', 1, '2025-07-07 10:50:21', '2025-07-07 10:50:21'),
+(4, 'Preparación Física Integral', 'Entrenamiento físico específico para mejorar fuerza, velocidad y resistencia', 'fisico', 12, 34.99, 'EUR', '/img/programas/fisico.jpg', 1, '2025-07-07 10:50:21', '2025-07-07 10:50:21');
+
+-- --------------------------------------------------------
+
+--
+-- Volcado de datos para la tabla `coaching_bloques`
+--
+
+INSERT INTO `coaching_bloques` (`id`, `programa_coaching_id`, `mes`, `titulo`, `descripcion`, `contenido`, `tipo_contenido`, `url_contenido`, `duracion_minutos`, `orden`, `created_at`) VALUES
+(1, 1, 1, 'Fundamentos de la Nutrición Deportiva', 'Introducción a los principios básicos de la nutrición para deportistas', '<h2>Fundamentos de la Nutrición Deportiva</h2><p>En este primer módulo aprenderás los conceptos básicos de la nutrición deportiva...</p>', 'texto', NULL, 45, 1, '2025-07-07 10:50:21'),
+(2, 1, 2, 'Macronutrientes y Rendimiento', 'Optimiza tu consumo de proteínas, carbohidratos y grasas', '<h2>Macronutrientes y Rendimiento</h2><p>Descubre cómo cada macronutriente afecta tu rendimiento deportivo...</p>', 'video', 'https://www.youtube.com/watch?v=ejemplo1', 60, 2, '2025-07-07 10:50:21'),
+(3, 1, 3, 'Hidratación y Recuperación', 'Estrategias de hidratación para antes, durante y después del ejercicio', '<h2>Hidratación y Recuperación</h2><p>La hidratación es clave para el rendimiento y la recuperación...</p>', 'texto', NULL, 30, 3, '2025-07-07 10:50:21'),
+(4, 2, 1, 'Mentalidad del Ganador', 'Desarrolla la mentalidad necesaria para alcanzar tus objetivos deportivos', '<h2>Mentalidad del Ganador</h2><p>La psicología deportiva es fundamental para el éxito...</p>', 'video', 'https://www.youtube.com/watch?v=ejemplo2', 75, 1, '2025-07-07 10:50:21'),
+(5, 2, 2, 'Gestión del Estrés y Ansiedad', 'Técnicas para manejar la presión en competiciones importantes', '<h2>Gestión del Estrés y Ansiedad</h2><p>Aprende a convertir la presión en motivación...</p>', 'audio', 'https://ejemplo.com/audio1.mp3', 45, 2, '2025-07-07 10:50:21'),
+(6, 3, 1, 'Control del Balón', 'Técnicas avanzadas de control y dominio del balón', '<h2>Control del Balón</h2><p>El control del balón es la base de todo jugador de fútbol...</p>', 'video', 'https://www.youtube.com/watch?v=ejemplo3', 90, 1, '2025-07-07 10:50:21'),
+(7, 3, 2, 'Pase y Recepción', 'Mejora tu precisión en el pase y recepción del balón', '<h2>Pase y Recepción</h2><p>El pase es el fundamento del juego colectivo...</p>', 'interactivo', 'https://ejemplo.com/interactivo1', 60, 2, '2025-07-07 10:50:21'),
+(8, 4, 1, 'Fuerza Funcional', 'Desarrollo de la fuerza específica para el deporte', '<h2>Fuerza Funcional</h2><p>La fuerza funcional es esencial para el rendimiento deportivo...</p>', 'video', 'https://www.youtube.com/watch?v=ejemplo4', 80, 1, '2025-07-07 10:50:21'),
+(9, 4, 2, 'Velocidad y Agilidad', 'Entrenamiento específico para mejorar velocidad y cambios de dirección', '<h2>Velocidad y Agilidad</h2><p>La velocidad es una cualidad determinante en muchos deportes...</p>', 'texto', NULL, 50, 2, '2025-07-07 10:50:21');
+
+-- --------------------------------------------------------
+
 --
 -- Índices para tablas volcadas
 --
@@ -625,6 +800,62 @@ ALTER TABLE `valoraciones_entrenamientos`
   ADD KEY `usuario_id` (`usuario_id`);
 
 --
+-- Indices de la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `usuario_id` (`usuario_id`),
+  ADD KEY `programacion_id` (`programacion_id`),
+  ADD KEY `stripe_payment_intent_id` (`stripe_payment_intent_id`);
+
+--
+-- Indices de la tabla `programas_precios`
+--
+ALTER TABLE `programas_precios`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `programacion_id` (`programacion_id`);
+
+--
+-- Indices de la tabla `programas_coaching`
+--
+ALTER TABLE `programas_coaching`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `coaching_bloques`
+--
+ALTER TABLE `coaching_bloques`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `programa_coaching_id` (`programa_coaching_id`),
+  ADD KEY `mes` (`mes`);
+
+--
+-- Indices de la tabla `suscripciones_coaching`
+--
+ALTER TABLE `suscripciones_coaching`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_usuario_programa` (`usuario_id`,`programa_coaching_id`),
+  ADD KEY `programa_coaching_id` (`programa_coaching_id`),
+  ADD KEY `stripe_subscription_id` (`stripe_subscription_id`);
+
+--
+-- Indices de la tabla `accesos_bloques`
+--
+ALTER TABLE `accesos_bloques`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_usuario_bloque_suscripcion` (`usuario_id`,`bloque_id`,`suscripcion_id`),
+  ADD KEY `bloque_id` (`bloque_id`),
+  ADD KEY `suscripcion_id` (`suscripcion_id`);
+
+--
+-- Indices de la tabla `pagos_suscripcion`
+--
+ALTER TABLE `pagos_suscripcion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `suscripcion_id` (`suscripcion_id`),
+  ADD KEY `stripe_payment_intent_id` (`stripe_payment_intent_id`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
@@ -711,6 +942,92 @@ ALTER TABLE `usuarios`
 --
 ALTER TABLE `valoraciones_entrenamientos`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+
+--
+-- AUTO_INCREMENT de la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `programas_precios`
+--
+ALTER TABLE `programas_precios`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT de la tabla `programas_coaching`
+--
+ALTER TABLE `programas_coaching`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `coaching_bloques`
+--
+ALTER TABLE `coaching_bloques`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT de la tabla `suscripciones_coaching`
+--
+ALTER TABLE `suscripciones_coaching`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `accesos_bloques`
+--
+ALTER TABLE `accesos_bloques`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `pagos_suscripcion`
+--
+ALTER TABLE `pagos_suscripcion`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`programacion_id`) REFERENCES `programaciones` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `programas_precios`
+--
+ALTER TABLE `programas_precios`
+  ADD CONSTRAINT `programas_precios_ibfk_1` FOREIGN KEY (`programacion_id`) REFERENCES `programaciones` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `coaching_bloques`
+--
+ALTER TABLE `coaching_bloques`
+  ADD CONSTRAINT `coaching_bloques_ibfk_1` FOREIGN KEY (`programa_coaching_id`) REFERENCES `programas_coaching` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `suscripciones_coaching`
+--
+ALTER TABLE `suscripciones_coaching`
+  ADD CONSTRAINT `suscripciones_coaching_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `suscripciones_coaching_ibfk_2` FOREIGN KEY (`programa_coaching_id`) REFERENCES `programas_coaching` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `accesos_bloques`
+--
+ALTER TABLE `accesos_bloques`
+  ADD CONSTRAINT `accesos_bloques_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `accesos_bloques_ibfk_2` FOREIGN KEY (`bloque_id`) REFERENCES `coaching_bloques` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `accesos_bloques_ibfk_3` FOREIGN KEY (`suscripcion_id`) REFERENCES `suscripciones_coaching` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `pagos_suscripcion`
+--
+ALTER TABLE `pagos_suscripcion`
+  ADD CONSTRAINT `pagos_suscripcion_ibfk_1` FOREIGN KEY (`suscripcion_id`) REFERENCES `suscripciones_coaching` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

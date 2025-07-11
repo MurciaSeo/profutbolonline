@@ -42,20 +42,9 @@ class DashboardController extends BaseController {
         ];
 
         if ($rol === 'admin') {
-            // Métricas para administradores
-            $data['total_usuarios'] = $this->usuarioModel->getTotalUsuarios();
-            $data['usuarios_nuevos_mes'] = $this->usuarioModel->getUsuariosNuevosMes();
-            $data['entrenamientos_completados'] = $this->entrenamientoModel->getTotalEntrenamientosCompletados();
-            $data['tasa_completitud'] = $this->entrenamientoModel->getTasaCompletitud();
-            $data['usuarios_activos_mes'] = $this->usuarioModel->getUsuariosActivosMes();
-
-            // Datos para gráficos
-            $data['entrenamientos_por_mes'] = $this->entrenamientoModel->getEntrenamientosPorMes();
-            $data['distribucion_usuarios'] = $this->usuarioModel->getDistribucionUsuarios();
-
-            // Tablas de datos
-            $data['ultimos_usuarios'] = $this->usuarioModel->getUltimosUsuarios(5);
-            $data['entrenamientos_recientes'] = $this->entrenamientoModel->getEntrenamientosRecientes(5);
+            // Redirigir a los administradores al dashboard unificado
+            header('Location: /admin/dashboard');
+            exit;
         } 
         elseif ($rol === 'entrenador') {
             // Métricas para entrenadores

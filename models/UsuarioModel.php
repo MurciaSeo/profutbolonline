@@ -310,18 +310,27 @@ class UsuarioModel extends BaseModel {
     }
 
     public function getTotalEntrenados($entrenador_id) {
-        try {
-            $sql = "SELECT COUNT(*) as total 
-                   FROM usuarios 
-                   WHERE entrenador_id = :entrenador_id";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':entrenador_id', $entrenador_id, PDO::PARAM_INT);
-            $stmt->execute();
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result['total'];
-        } catch (PDOException $e) {
-            error_log("Error en getTotalEntrenados: " . $e->getMessage());
-            return 0;
-        }
+        $sql = "SELECT COUNT(*) as total FROM usuarios WHERE entrenador_id = ? AND rol = 'entrenado'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$entrenador_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['total'];
+    }
+    
+    /**
+     * Obtiene usuarios activos (que han tenido actividad reciente)
+     */
+    public function getUsuariosActivos() {
+        $sql = "SELECT u.*, 
+                       (SELECT COUNT(*) FROM programacion_dias_usuarios pdu 
+                        WHERE pdu.usuario_id = u.id AND pdu.completado = 1 
+                        AND pdu.fecha_completado >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as actividad_reciente
+                FROM usuarios u
+                WHERE u.rol = 'entrenado'
+                HAVING actividad_reciente > 0
+                ORDER BY actividad_reciente DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 } 

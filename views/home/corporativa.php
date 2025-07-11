@@ -68,7 +68,7 @@
         .hero-section {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            padding: 120px 0 80px;
+            padding: 200px 0 80px;
             position: relative;
             overflow: hidden;
         }
@@ -355,7 +355,7 @@
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container">
         <a class="navbar-brand" href="/">
-                <img src="/img/logo.png" alt="Logo" height="50">
+                <img src="/img/logo.png" alt="Logo" height="100">
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
